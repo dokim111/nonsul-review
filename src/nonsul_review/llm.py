@@ -31,10 +31,37 @@ from typing import Any, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from nonsul_review.schema import Answer, JudgementItem, Problem, Result
+from nonsul_review.schema import Answer, JudgementItem, Problem, Result, ReviewFlag
 
 T = TypeVar("T")
-PROMPT_VERSIONS = {"rubric": "rubric-v1", "free": "free-v1"}
+PROMPT_VERSIONS = {"rubric": "rubric-v1", "free": "free-v1"}  # v1 names, kept for callers
+DEFAULT_PROMPT_SET = "v1"
+PROMPT_SETS: dict[str, dict[str, Any]] = {
+    "v1": {
+        "common": "common-v1.txt",
+        "rubric": ("rubric-item-v1.txt", "rubric-feedback-v1.txt"),
+        "free": ("free-feedback-v1.txt", "free-table-v1.txt"),
+        "review_flags": False,
+    },
+    "v2": {
+        "common": "common-v2.txt",
+        "rubric": ("rubric-item-v2.txt", "rubric-feedback-v2.txt"),
+        "free": ("free-feedback-v2.txt", "free-table-v2.txt"),
+        "review_flags": True,
+    },
+}
+
+
+def prompt_version(mode: str, prompt_set: str) -> str:
+    return f"{mode}-{prompt_set}"
+
+
+def prompt_file_names(mode: str, prompt_set: str) -> set[str]:
+    """All prompt files whose hashes a result of this procedure records."""
+    files = PROMPT_SETS[prompt_set]
+    return {files["common"], *files[mode]}
+
+
 _SECRET_PATTERN = re.compile(r"sk-ant-[A-Za-z0-9_-]{8,}")
 _PRIVATE_RESPONSE_KEYS = {
     "authorization",
@@ -59,8 +86,11 @@ class RunConfig:
     timeout: float = 60.0
     max_retries: int = 2
     demo: bool = False
+    prompt_set: str = DEFAULT_PROMPT_SET
 
     def __post_init__(self) -> None:
+        if not isinstance(self.prompt_set, str) or self.prompt_set not in PROMPT_SETS:
+            raise ValueError(f"prompt_set must be one of {', '.join(sorted(PROMPT_SETS))}")
         if isinstance(self.temperature, bool) or not isinstance(self.temperature, (int, float)):
             raise ValueError("temperature must be a number between 0 and 1")
         if not math.isfinite(self.temperature) or not 0 <= self.temperature <= 1:
@@ -103,6 +133,18 @@ class _Feedback(BaseModel):
 class _Table(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
     items: list[JudgementItem]
+
+
+class _FeedbackWithFlags(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+    overall_feedback: str = Field(min_length=1, max_length=200_000)
+    review_flags: list[ReviewFlag] = Field(max_length=500)
+
+
+class _TableWithFlags(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+    items: list[JudgementItem]
+    review_flags: list[ReviewFlag] = Field(max_length=500)
 
 
 def _canonical_json(value: Any) -> str:
@@ -284,7 +326,8 @@ class DemoClient:
     error labels, split, source, or alternative-solution metadata.
     """
 
-    def __init__(self, problem: Problem, answer_body: str):
+    def __init__(self, problem: Problem, answer_body: str, with_review_flags: bool = False):
+        self._with_review_flags = with_review_flags
         path = resources.files("nonsul_review").joinpath("demo", "cases.json")
         try:
             data = json.loads(path.read_text(encoding="utf-8"))
@@ -320,8 +363,12 @@ class DemoClient:
             result = items[0]
         elif workflow["stage"] == "free:table":
             result = {"items": self._case["items"]}
+            if self._with_review_flags:
+                result["review_flags"] = []
         else:
             result = {"overall_feedback": self._case["overall_feedback"]}
+            if self._with_review_flags and workflow["stage"] == "rubric:feedback":
+                result["review_flags"] = []
         return {
             "id": "demo-authored-fixture",
             "type": "message",
@@ -348,6 +395,8 @@ class ReviewSession:
             "answer_body": answer.body,
         }
         self.provider = "demo" if config.demo else "anthropic"
+        self.prompt_set = config.prompt_set
+        self.files = PROMPT_SETS[config.prompt_set]
         self.created_at = datetime.now(timezone.utc).isoformat()
         self.prompt_hashes: dict[str, str] = {}
         self.raw: dict[str, Any] = {
@@ -357,7 +406,7 @@ class ReviewSession:
             "model": config.model,
             "is_demo": config.demo,
             "mode": mode,
-            "prompt_version": PROMPT_VERSIONS[mode],
+            "prompt_version": prompt_version(mode, config.prompt_set),
             "input_sha256": input_fingerprint(problem, answer.body),
             "config_sha256": config_fingerprint(config, self.provider),
             "created_at": self.created_at,
@@ -426,6 +475,26 @@ class ReviewSession:
         table = _Table.model_validate(data)
         return self.validate_items([item.model_dump(mode="json") for item in table.items])
 
+    def validate_flags(self, flags: list[ReviewFlag]) -> list[ReviewFlag]:
+        known = {rubric.id for rubric in self.problem.rubric}
+        for flag in flags:
+            if flag.rubric_id not in known:
+                raise StageValidationError("review_flags must reference the problem's rubric IDs.")
+            if not flag.note.strip():
+                raise StageValidationError("review_flags notes must not be blank.")
+        return flags
+
+    def validate_feedback_with_flags(self, data: Any) -> tuple[str, list[ReviewFlag]]:
+        parsed = _FeedbackWithFlags.model_validate(data)
+        if not parsed.overall_feedback.strip():
+            raise StageValidationError("overall_feedback must not be blank.")
+        return parsed.overall_feedback, self.validate_flags(parsed.review_flags)
+
+    def validate_table_with_flags(self, data: Any) -> tuple[list[JudgementItem], list[ReviewFlag]]:
+        parsed = _TableWithFlags.model_validate(data)
+        items = self.validate_items([item.model_dump(mode="json") for item in parsed.items])
+        return items, self.validate_flags(parsed.review_flags)
+
     def call_json(
         self,
         *,
@@ -434,7 +503,7 @@ class ReviewSession:
         workflow: dict[str, Any],
         validator: Callable[[Any], T],
     ) -> T:
-        system = self._prompt("common-v1.txt") + "\n\n" + self._prompt(prompt_file)
+        system = self._prompt(self.files["common"]) + "\n\n" + self._prompt(prompt_file)
         stage_trace: dict[str, Any] = {
             "stage": stage,
             "prompt_file": prompt_file,
@@ -514,7 +583,7 @@ class ReviewSession:
             "is_demo": self.config.demo,
             "model": self.config.model,
             "response_models": response_models,
-            "prompt_version": PROMPT_VERSIONS[self.mode],
+            "prompt_version": prompt_version(self.mode, self.prompt_set),
             "prompt_sha256": self.prompt_hashes,
             "temperature": float(self.config.temperature),
             "max_tokens": self.config.max_tokens,
@@ -527,6 +596,17 @@ class ReviewSession:
             "calls": len(attempts),
             "retry_count": len(attempts) - len(self.raw["stages"]),
         }
+
+
+def apply_review_flags(items: list[JudgementItem], flags: list[ReviewFlag]) -> list[JudgementItem]:
+    """needs_review = original OR flagged; verdicts and reasons stay unchanged."""
+    flagged = {flag.rubric_id for flag in flags}
+    return [
+        item.model_copy(update={"needs_review": True})
+        if item.rubric_id in flagged and not item.needs_review
+        else item
+        for item in items
+    ]
 
 
 def run_review(
@@ -555,7 +635,9 @@ def run_review(
             if client is not None:
                 raise session._fail("Demo mode does not accept a custom provider client.")
             try:
-                session.client = DemoClient(problem, answer.body)
+                session.client = DemoClient(
+                    problem, answer.body, with_review_flags=session.files["review_flags"]
+                )
             except ValueError as exc:
                 raise session._fail(str(exc)) from None
         elif client is not None:
@@ -581,13 +663,14 @@ def run_review(
             from nonsul_review.modes.rubric import run
         else:
             from nonsul_review.modes.free import run
-        items, feedback = run(session)
+        items, feedback, flags = run(session)
         result = Result(
             answer_id=answer.id,
             problem_id=problem.id,
             mode=mode,
-            items=items,
+            items=apply_review_flags(items, flags),
             overall_feedback=feedback,
+            review_flags=flags,
             meta=session.result_meta(),
         )
         session.raw["status"] = "succeeded"

@@ -80,5 +80,5 @@ jobs:
       - name: Verify installed resources away from source checkout
         working-directory: ${{ runner.temp }}
         run: |
-          "$RUNNER_TEMP/wheel-env/bin/python" -c 'from importlib.resources import files; import nonsul_review; p = files("nonsul_review"); assert p.joinpath("prompts/common-v1.txt").read_text(encoding="utf-8"); assert p.joinpath("demo/cases.json").read_text(encoding="utf-8"); print(nonsul_review.__version__)'
+          "$RUNNER_TEMP/wheel-env/bin/python" -c 'from importlib.resources import files; import nonsul_review; p = files("nonsul_review"); assert all(p.joinpath(f"prompts/{name}").read_text(encoding="utf-8") for name in ("common-v1.txt", "common-v2.txt", "rubric-feedback-v2.txt", "free-table-v2.txt")); assert p.joinpath("demo/cases.json").read_text(encoding="utf-8"); print(nonsul_review.__version__)'
           "$RUNNER_TEMP/wheel-env/bin/nonsul-review" run --problem "$GITHUB_WORKSPACE/examples/ex-001/problem.yaml" --answer "$GITHUB_WORKSPACE/examples/ex-001/answers/a01.md" --mode free --demo --out "$RUNNER_TEMP/wheel-demo"

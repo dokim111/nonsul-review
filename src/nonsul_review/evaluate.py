@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import Any
 
 from .io import load_answer, read_json, read_yaml
-from .schema import Result, validate_id
+from .schema import Result, prompt_set_of, validate_id
 
 VERDICTS = ("not_met", "partial", "met")
 _ORDINAL = {value: index for index, value in enumerate(VERDICTS)}
@@ -629,9 +629,17 @@ def _paired_modes(groups: list[_PredictionGroup]) -> list[dict[str, Any]]:
                 and len(rubric.settings["response_models"]) == 1
                 and rubric.settings["response_models"] == free.settings["response_models"]
             )
-            rubric_common = (rubric.settings["prompt_sha256"] or {}).get("common-v1.txt")
-            free_common = (free.settings["prompt_sha256"] or {}).get("common-v1.txt")
-            common_prompt_verified = bool(rubric_common) and rubric_common == free_common
+            rubric_set = prompt_set_of(rubric.settings.get("prompt_version"))
+            free_set = prompt_set_of(free.settings.get("prompt_version"))
+            common_name = f"common-{rubric_set}.txt" if rubric_set else None
+            rubric_common = (rubric.settings["prompt_sha256"] or {}).get(common_name)
+            free_common = (free.settings["prompt_sha256"] or {}).get(common_name)
+            common_prompt_verified = (
+                rubric_set is not None
+                and rubric_set == free_set
+                and bool(rubric_common)
+                and rubric_common == free_common
+            )
             config_hashes_verified = (
                 bool(rubric.settings["config_sha256"])
                 and rubric.settings["config_sha256"] == free.settings["config_sha256"]
@@ -775,6 +783,12 @@ def evaluate_directories(
         )
     if not gold.items:
         warnings.append("No gold rating items were loaded; error detection cannot be estimated.")
+    prompt_sets = {prompt_set_of(group.settings.get("prompt_version")) for group in groups}
+    if len(prompt_sets) > 1:
+        warnings.append(
+            "Predictions mix procedure versions (prompt sets); versions are never paired. "
+            "Evaluate each run in a separate prediction directory."
+        )
     if len(raters) < 2:
         warnings.append(
             "Fewer than two independent raters were loaded; inter-rater agreement cannot be estimated."

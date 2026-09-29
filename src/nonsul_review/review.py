@@ -46,6 +46,7 @@ _ITEM_KEYS = frozenset(
         "model_reason",
         "model_feedback",
         "model_needs_review",
+        "model_review_flags",
         *EDITABLE_FIELDS,
         "edit_level",
     }
@@ -54,6 +55,13 @@ _ITEM_KEYS = frozenset(
 
 class ReviewError(ValueError):
     """A review cannot be safely exported or finalized."""
+
+
+def _flag_notes(result: dict[str, Any], rubric_id: str) -> list[str]:
+    """Read-only notes raised by the final model stage for one rubric item."""
+    return [
+        flag["note"] for flag in result.get("review_flags", []) if flag["rubric_id"] == rubric_id
+    ]
 
 
 def _relative_path(path: Path, parent: Path) -> str:
@@ -80,6 +88,9 @@ def _load_original(path: Path) -> tuple[dict[str, Any], dict[str, Any], str]:
     try:
         original = read_json(path)
         validated = Result.model_validate(original).model_dump(mode="json")
+        if isinstance(original, dict) and "review_flags" not in original:
+            # v1 records have no flag field; do not add one to their final copies.
+            validated.pop("review_flags", None)
     except Exception:
         # Validation errors can echo answer excerpts and metadata.  Do not
         # include their representations in a CLI-visible exception.
@@ -127,6 +138,7 @@ def export_review(result_path: Path, out_path: Path | None = None) -> Path:
                 "model_reason": item["reason"],
                 "model_feedback": item["feedback"],
                 "model_needs_review": item.get("needs_review", False),
+                "model_review_flags": _flag_notes(result, item["rubric_id"]),
                 **{field: item[field] for field in EDITABLE_FIELDS},
                 "edit_level": None,
             }
@@ -137,7 +149,9 @@ def export_review(result_path: Path, out_path: Path | None = None) -> Path:
             "강사가 항목별 verdict, evidence, reason, feedback 및 전체 "
             "overall_feedback을 검토·수정하세요. edit_level은 "
             "none / minor / major 또는 null(미기재)입니다. model_* 및 "
-            "source, original, 식별자는 수정하지 마세요. null 판정은 반드시 "
+            "source, original, 식별자는 수정하지 마세요. model_review_flags는 "
+            "모델의 마지막 단계가 남긴 강사 확인 요청이며, 해당 항목과 "
+            "overall_feedback을 확인한 뒤 확정하세요. null 판정은 반드시 "
             "해결해야 합니다. finalize 명령 실행은 모든 항목을 강사가 "
             "확인하여 확정한다는 의미이며 점수를 자동 산출하지 않습니다. "
             "원본 JSON은 보존하고, 검수 파일과 함께 이동할 때에는 "
@@ -227,6 +241,14 @@ def _check_items(review: dict[str, Any], result: dict[str, Any]) -> dict[str, di
             or item["model_needs_review"] != original.get("needs_review", False)
         ):
             raise ReviewError("The read-only model review flag was changed or removed.")
+        expected_notes = _flag_notes(result, rubric_id)
+        if "model_review_flags" in item:
+            if item["model_review_flags"] != expected_notes:
+                raise ReviewError("Read-only model review notes were changed.")
+        elif expected_notes:
+            # Copies exported before review notes existed are accepted only
+            # when there is nothing to show.
+            raise ReviewError("Read-only model review notes were removed.")
         verdict = item.get("verdict")
         if verdict is None:
             raise ReviewError(
@@ -306,6 +328,7 @@ def finalize_review(review_path: Path, out_dir: Path | None = None) -> tuple[Pat
     changed_counts: Counter[str] = Counter()
     content_changed_count = 0
     resolved_count = 0
+    flag_count = 0
     for original in result["items"]:
         rubric_id = original["rubric_id"]
         edited = reviewed[rubric_id]
@@ -332,9 +355,12 @@ def finalize_review(review_path: Path, out_dir: Path | None = None) -> tuple[Pat
                 "needs_review": False,
             }
         )
+        notes = _flag_notes(result, rubric_id)
+        flag_count += len(notes)
         item_logs.append(
             {
                 "rubric_id": rubric_id,
+                **({"model_review_flags": notes} if notes else {}),
                 "verdict_changed": original["verdict"] != edited["verdict"],
                 "feedback_changed": original["feedback"] != edited["feedback"],
                 "edit_level": level,
@@ -391,6 +417,7 @@ def finalize_review(review_path: Path, out_dir: Path | None = None) -> tuple[Pat
             "evidence_changed_count": changed_counts["evidence"],
             "reason_changed_count": changed_counts["reason"],
             "review_flags_resolved_count": resolved_count,
+            "model_review_flag_count": flag_count,
             "overall_feedback_changed": overall_changed,
             "edit_levels": {key: levels[key] for key in ("none", "minor", "major", "unrated")},
         },

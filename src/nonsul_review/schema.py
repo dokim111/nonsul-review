@@ -126,12 +126,33 @@ class JudgementItem(StrictModel):
         return self
 
 
+class ReviewFlag(StrictModel):
+    """An instructor-facing warning raised by a procedure's final stage.
+
+    Flags never change a verdict or a reason; they mark the item for review and
+    keep the note separate from the item-stage reasoning.
+    """
+
+    rubric_id: str
+    note: str = Field(min_length=1, max_length=20_000)
+
+    _id_valid = field_validator("rubric_id")(validate_id)
+
+    @field_validator("note")
+    @classmethod
+    def note_not_blank(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("review flag note must not be blank")
+        return value
+
+
 class Result(StrictModel):
     answer_id: str
     problem_id: str
     mode: Mode
     items: list[JudgementItem] = Field(min_length=1, max_length=100)
     overall_feedback: str = Field(min_length=1, max_length=200_000)
+    review_flags: list[ReviewFlag] = Field(default_factory=list, max_length=500)
     meta: dict[str, Any]
 
     _ids_valid = field_validator("answer_id", "problem_id")(validate_id)
@@ -141,6 +162,8 @@ class Result(StrictModel):
         identifiers = [item.rubric_id for item in self.items]
         if len(set(identifiers)) != len(identifiers):
             raise ValueError("result rubric IDs must be unique")
+        if any(flag.rubric_id not in identifiers for flag in self.review_flags):
+            raise ValueError("review flags must reference rubric IDs present in items")
         for key in ("model", "prompt_version", "created_at"):
             if not isinstance(self.meta.get(key), str) or not self.meta[key].strip():
                 raise ValueError(f"meta.{key} is required")
@@ -173,3 +196,22 @@ def validate_result_context(result: Result, problem: Problem, answer: Answer) ->
                 f"{item.rubric_id}: evidence must be a verbatim substring of the answer"
             )
     return result
+
+
+def prompt_set_of(prompt_version: Any) -> str | None:
+    """Return the prompt-set suffix of a procedure version such as ``rubric-v2``."""
+    if not isinstance(prompt_version, str):
+        return None
+    match = re.fullmatch(r"(?:rubric|free)-(v[0-9]+)", prompt_version)
+    return match.group(1) if match else None
+
+
+def result_to_json(result: Result) -> dict[str, Any]:
+    """Serialize a result; v1 records keep their original field set."""
+    data = result.model_dump(mode="json")
+    if (
+        prompt_set_of(result.meta.get("prompt_version")) in (None, "v1")
+        and not data["review_flags"]
+    ):
+        data.pop("review_flags")
+    return data

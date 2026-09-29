@@ -674,7 +674,7 @@ def _deliberately_invalid_live_manifest(tmp_path: Path):
     result["meta"].update(
         provider="anthropic",
         is_demo=False,
-        prompt_version="free-v1",
+        prompt_version="free-v2",
         input_sha256=input_fingerprint(problem, answer.body),
         answer_body_sha256=hashlib.sha256(answer.body.encode("utf-8")).hexdigest(),
         config_sha256=config_fingerprint(config, "anthropic"),
@@ -692,7 +692,7 @@ def _deliberately_invalid_live_manifest(tmp_path: Path):
             "is_demo": False,
             "status": "succeeded",
             "mode": "free",
-            "prompt_version": "free-v1",
+            "prompt_version": "free-v2",
             "created_at": result["meta"]["created_at"],
             "model": result["meta"]["model"],
             "input_sha256": result["meta"]["input_sha256"],
@@ -717,6 +717,7 @@ def _deliberately_invalid_live_manifest(tmp_path: Path):
         "created_at": "2026-09-29T08:00:00+09:00",
         "source_sha256": checker.source_fingerprint(root),
         "model": result["meta"]["model"],
+        "prompt_set": "v2",
         "runs": [{"answer_id": answer.id, "problem_id": problem.id, "mode": "free", **descriptors}],
     }
     evidence = root / "evidence.json"

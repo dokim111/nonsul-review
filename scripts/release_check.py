@@ -21,6 +21,8 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_EVIDENCE = Path("examples/ex-001/live/evidence.json")
+# Public live evidence must come from the current review procedure.
+REQUIRED_PROMPT_SET = "v2"
 PUBLIC_ROOT_FILES = {
     "README.md",
     "LICENSE",
@@ -232,12 +234,42 @@ def _is_tracked(root: Path, path: Path) -> bool:
     )
 
 
+def _check_review_flags(result: Any, stages: list[Any], supported: bool) -> None:
+    """The final stage's flags must reach the result unchanged and mark their items."""
+    flags = [flag.model_dump(mode="json") for flag in result.review_flags]
+    if not supported:
+        if flags:
+            raise ReleaseCheckError("this procedure version does not produce review flags")
+        return
+    final_attempt = stages[-1]["attempts"][-1]
+    texts = [
+        block["text"]
+        for block in final_attempt["response"]["content"]
+        if isinstance(block, dict) and block.get("type") == "text"
+    ]
+    try:
+        reported = json.loads("\n".join(texts))["review_flags"]
+    except (KeyError, TypeError, ValueError) as exc:
+        raise ReleaseCheckError("final API stage did not return review_flags") from exc
+    if reported != flags:
+        raise ReleaseCheckError("result review flags differ from the final API stage response")
+    flagged = {flag["rubric_id"] for flag in flags}
+    if any(item.rubric_id in flagged and not item.needs_review for item in result.items):
+        raise ReleaseCheckError("flagged items must be marked needs_review")
+
+
 def check_live_evidence(root: Path, evidence: Path, *, require_tracked: bool = False) -> int:
     """Require paired public a01/a02 examples with valid non-demo API stage logs."""
     from nonsul_review import __version__
     from nonsul_review.io import load_answer, load_problem
-    from nonsul_review.llm import RunConfig, config_fingerprint, input_fingerprint
-    from nonsul_review.schema import Result, validate_result_context
+    from nonsul_review.llm import (
+        PROMPT_SETS,
+        RunConfig,
+        config_fingerprint,
+        input_fingerprint,
+        prompt_file_names,
+    )
+    from nonsul_review.schema import Result, prompt_set_of, validate_result_context
 
     if not evidence.is_file():
         raise ReleaseCheckError(
@@ -250,6 +282,10 @@ def check_live_evidence(root: Path, evidence: Path, *, require_tracked: bool = F
         or manifest.get("provider") != "anthropic"
     ):
         raise ReleaseCheckError("live evidence must be genuine Anthropic output, not a demo")
+    if manifest.get("prompt_set") != REQUIRED_PROMPT_SET:
+        raise ReleaseCheckError(
+            f"live evidence must use prompt set {REQUIRED_PROMPT_SET}; rerun scripts/live_smoke.py"
+        )
     if manifest.get("tool_version") != __version__:
         raise ReleaseCheckError("live evidence was produced with a different tool version")
     if manifest.get("source_sha256") != source_fingerprint(root):
@@ -344,11 +380,15 @@ def check_live_evidence(root: Path, evidence: Path, *, require_tracked: bool = F
             stage.get("stage") if isinstance(stage, dict) else None for stage in stages
         ] != stage_names:
             raise ReleaseCheckError("raw log has missing, reordered, or extra API stages")
-        prompt_names = (
-            {"common-v1.txt", "rubric-item-v1.txt", "rubric-feedback-v1.txt"}
-            if result.mode == "rubric"
-            else {"common-v1.txt", "free-feedback-v1.txt", "free-table-v1.txt"}
-        )
+        prompt_set = prompt_set_of(meta.get("prompt_version"))
+        if prompt_set != REQUIRED_PROMPT_SET or meta.get("prompt_version") != (
+            f"{result.mode}-{REQUIRED_PROMPT_SET}"
+        ):
+            raise ReleaseCheckError(
+                f"live result must use the {REQUIRED_PROMPT_SET} procedure for its mode"
+            )
+        common_name = PROMPT_SETS[prompt_set]["common"]
+        prompt_names = prompt_file_names(result.mode, prompt_set)
         prompts = {
             name: (root / "src/nonsul_review/prompts" / name).read_text(encoding="utf-8")
             for name in prompt_names
@@ -372,7 +412,7 @@ def check_live_evidence(root: Path, evidence: Path, *, require_tracked: bool = F
             prompt_name = stage.get("prompt_file")
             if prompt_name not in prompts:
                 raise ReleaseCheckError("API stage references an unknown prompt")
-            prompt_text = prompts["common-v1.txt"] + "\n\n" + prompts[prompt_name]
+            prompt_text = prompts[common_name] + "\n\n" + prompts[prompt_name]
             if (
                 stage.get("prompt_sha256")
                 != hashlib.sha256(prompt_text.encode("utf-8")).hexdigest()
@@ -422,6 +462,7 @@ def check_live_evidence(root: Path, evidence: Path, *, require_tracked: bool = F
                 or usage["output_tokens"] <= 0
             ):
                 raise ReleaseCheckError("API response lacks real message metadata/token usage")
+        _check_review_flags(result, stages, PROMPT_SETS[prompt_set]["review_flags"])
         if sorted(response_models) != meta.get("response_models") or len(response_models) != 1:
             raise ReleaseCheckError("all API attempts must record the same resolved model")
         common_response_models.add(tuple(sorted(response_models)))

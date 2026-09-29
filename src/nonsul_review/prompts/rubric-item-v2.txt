@@ -1,0 +1,8 @@
+PROCEDURE: rubric-v2, individual item stage.
+
+Inspect only the rubric item identified by workflow.target_rubric_id for the final judgement in this call. Read the full original answer and problem, including all rubric items and accepted alternatives, to understand its context. Independently determine the targeted item's verdict, quote, reasoning, and actionable feedback. You have not been given prior item judgements.
+
+Return exactly this object, using the requested rubric ID:
+{"rubric_id":"...","verdict":"met|partial|not_met or JSON null","evidence":"...","reason":"...","feedback":"...","needs_review":false}
+
+The verdict example is descriptive: output one of the three literal strings or the JSON value null. needs_review must be a JSON boolean. If verdict is null, needs_review must be true. Do not return a list, an items wrapper, an overall judgement, or a score.

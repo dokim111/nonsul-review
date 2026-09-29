@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased — review procedure v2
+
+### Added
+
+- Prompt set v2 (`common-v2`, `rubric-*-v2`, `free-*-v2`), selected with `--prompt-set` (default `v2` for `run`, `batch`, and `scripts/live_smoke.py`). The v1 prompts remain and reproduce earlier runs.
+- `review_flags` returned by each procedure's final stage without extra API calls. Flags mark items `needs_review`, never change verdicts or reasons, are shown read-only in review YAML, preserved by `finalize`, and checked against the raw final response by the live release gate.
+- `docs/review-procedure-v2.md` describing the changes, flag rules, exploratory evaluation fields, and naming of reruns.
+
+### Changed
+
+- The live release gate requires v2 evidence. Paired-mode evaluation requires both modes to use the same prompt set and common prompt.
+- The Python `RunConfig` default stays `v1` so that existing callers and v1 records are unaffected.
+
+
 ## 0.1.0 — pre-release preparation (2026-09-29)
 
 This entry describes the prepared source tree, not a completed GitHub or PyPI publication.

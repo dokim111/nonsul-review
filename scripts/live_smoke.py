@@ -31,6 +31,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--temperature", type=float, default=1.0)
     parser.add_argument("--max-tokens", type=int, default=4096)
     parser.add_argument("--timeout", type=float, default=120)
+    parser.add_argument(
+        "--prompt-set",
+        choices=("v1", "v2"),
+        default="v2",
+        help="Procedure version; the release gate requires the current version (v2)",
+    )
     args = parser.parse_args(argv)
     load_dotenv(ROOT / ".env", override=False)
     if not os.environ.get("ANTHROPIC_API_KEY", "").strip():
@@ -79,6 +85,8 @@ def main(argv: list[str] | None = None) -> int:
                 str(args.max_tokens),
                 "--timeout",
                 str(args.timeout),
+                "--prompt-set",
+                args.prompt_set,
             ]
             print(f"Live example: {answer_id} / {mode}", flush=True)
             completed = subprocess.run(command, cwd=ROOT, capture_output=True, check=False)
@@ -120,6 +128,7 @@ def main(argv: list[str] | None = None) -> int:
         "provider": "anthropic",
         "is_demo": False,
         "model": model,
+        "prompt_set": args.prompt_set,
         "git_commit": commit,
         "source_sha256": source_fingerprint(ROOT),
         "runs": runs,

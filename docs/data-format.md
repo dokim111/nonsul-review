@@ -93,6 +93,10 @@ $F(x)$의 대칭성을 이용하면 다음과 같이 계산할 수 있다.
 
 `input_sha256`에는 hidden metadata가 들어가지 않는다. 파일 자체 해시와 의미가 다르다. 결과의 meta 객체는 확정·평가 이력을 확장할 수 있지만, 최상위 판정표와 루브릭 항목의 알 수 없는 필드는 거부한다.
 
+### 검토 요청 메모: `review_flags` (v2)
+
+v2 결과에는 최상위 `review_flags` 목록이 있다. 각 원소는 `rubric_id`와 `note`로 이루어지며, 마지막 단계가 발견한 강사 확인 사항이다. 루브릭에 있는 ID만 허용되고, 메모가 있는 항목은 `needs_review: true`가 된다. 판정값과 `reason`은 바뀌지 않는다. v1 결과에는 이 필드가 없다. 규칙은 [검수 절차 v2](review-procedure-v2.md)에 있다.
+
 ## 원본·실패 기록
 
 `<answer_id>.<mode>.raw.json`은 `schema_version`, `status`, `provider`, `model`, `is_demo`, `mode`, 프롬프트·입력·설정 정보 및 `stages`를 담는다. 각 단계의 `attempts`에 응답 메시지 본문, 형식 검증 성공 여부, 간결한 오류 분류를 기록한다. HTTP 인증 헤더와 API 키를 저장하지 않는다. 응답 본문에는 답안 인용이 들어갈 수 있다.

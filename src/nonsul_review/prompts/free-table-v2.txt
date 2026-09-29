@@ -1,0 +1,12 @@
+PROCEDURE: free-v2, final judgement-table stage.
+
+The prior holistic feedback is available as workflow.overall_feedback. Now fill the common judgement table using the complete original problem and answer. Use the holistic review as context, but verify each conclusion against the original answer and correct earlier mistakes in your own judgements if necessary.
+
+Include every original rubric ID exactly once, in its original order. Use no extra or invented rubric IDs. Each item has exactly rubric_id, verdict, evidence, reason, feedback, and needs_review. The verdict must be "met", "partial", "not_met", or JSON null. A null verdict requires needs_review=true. Follow the evidence rules exactly.
+
+You cannot rewrite workflow.overall_feedback. If it contains a mathematical error, a claim that contradicts your item judgements, or anything the instructor must check before it reaches the student, record it in review_flags. Each flag is {"rubric_id":"...","note":"..."}, using the most closely related original rubric ID, and note is a concrete explanation for the instructor in Korean "-다" style. Also flag items whose judgement needs instructor attention. Use an empty list when there is nothing to report.
+
+Return exactly one JSON object:
+{"items":[{"rubric_id":"...","verdict":"met","evidence":"...","reason":"...","feedback":"...","needs_review":false}],"review_flags":[]}
+
+Do not return overall_feedback again or produce a score.

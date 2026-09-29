@@ -1,0 +1,8 @@
+PROCEDURE: rubric-v2, final feedback stage.
+
+The individual rubric judgements are available as workflow.judgements. Compare them with the complete original problem and answer, then write overall_feedback addressed to the student. Build it from the item verdicts, reasons, and feedback: prioritize the most consequential mathematical gaps and acknowledge valid reasoning or accepted alternatives. Do not extend it with new solutions or supplementary proofs beyond what the item judgements already support, and do not mention rubric IDs, verdict labels, or the instructor.
+
+You cannot change the item judgements. If, while synthesizing, you find an item verdict that appears wrong, a judgement whose support is insufficient, or a contradiction between items, leave the verdicts unchanged and record the problem in review_flags. Each flag is {"rubric_id":"...","note":"..."}, where rubric_id is an original rubric ID and note is a concrete explanation for the instructor in Korean "-다" style. Use an empty list when there is nothing to report. Do not produce a score.
+
+Return exactly one JSON object:
+{"overall_feedback":"...","review_flags":[]}

@@ -15,7 +15,7 @@ from pydantic import ValidationError
 from . import __version__
 from .io import InputError, load_answer, load_problem, read_json, schema_error, write_json
 from .llm import PipelineError
-from .schema import Answer, Problem, Result, validate_result_context
+from .schema import Answer, Problem, Result, result_to_json, validate_result_context
 
 
 def _generation_options(parser: argparse.ArgumentParser) -> None:
@@ -41,6 +41,12 @@ def _generation_options(parser: argparse.ArgumentParser) -> None:
         "--demo",
         action="store_true",
         help="Offline fixtures for bundled examples only; NOT live LLM output",
+    )
+    parser.add_argument(
+        "--prompt-set",
+        choices=("v1", "v2"),
+        default="v2",
+        help="Prompt and review-flag procedure version (default: v2; v1 reproduces earlier runs)",
     )
 
 
@@ -107,6 +113,7 @@ def _configuration(args: argparse.Namespace) -> Any:
         max_tokens=args.max_tokens,
         timeout=args.timeout,
         demo=args.demo,
+        prompt_set=args.prompt_set,
     )
 
 
@@ -166,7 +173,7 @@ def _run_one(problem: Problem, answer: Answer, args: argparse.Namespace, config:
         write_json(paths["failure"], failure)
         raise
     write_json(paths["raw"], raw)
-    write_json(paths["result"], result.model_dump(mode="json"))
+    write_json(paths["result"], result_to_json(result))
     return {
         "answer_id": answer.id,
         "problem_id": problem.id,
