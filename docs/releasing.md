@@ -1,12 +1,14 @@
 # 릴리스 절차
 
-이 저장소는 `0.1.0` 사전 공개를 준비한 코드다. 저장소 생성, 실제 API 호출, GitHub Actions 실행, GitHub release 게시, PyPI 게시를 완료한 것으로 가정하지 않는다. 실제 작업 기록은 해당 실행 결과를 확인한 뒤 작성한다.
+이 문서를 정리한 2026-09-29의 초기 확인 상태는 다음과 같다. [GitHub 저장소](https://github.com/dokim111/nonsul-review)는 공개되어 있고 [초기 CI 실행](https://github.com/dokim111/nonsul-review/actions/runs/36523220236)은 통과했다. 이 시점에는 실제 API 예제 검증, GitHub pre-release 게시, PyPI 게시를 완료하지 않았다. 이후 완료 상태는 최신 README와 Releases에서 확인한다. 초기 CI 통과가 이후 변경이나 실제 API 검증까지 대신하지는 않는다.
+
+API 키 설정부터 첫 호출까지는 [첫 실제 API 실행 안내](first-live-run.md)를 따른다. 아래 절차는 dev 실험을 검토한 뒤 최종 공개 근거를 만들고 게시하는 순서다.
 
 이 문서의 명령은 저장소 루트에서 실행한다. `OWNER`나 `MODEL_ID`가 보이면 자신의 값으로 바꾼다. API 키를 Git 명령, 워크플로 입력, 릴리스 노트에 넣지 않는다.
 
 ## 0. 소스 ZIP에서 시작하는 경우
 
-제공하는 소스 ZIP에는 `.git` 이력이 없다. 소스를 푼 폴더에서 Git 저장소를 처음 만드는 경우에만 다음을 실행한다. 이미 clone한 저장소라면 기존 이력을 이어 간다.
+현재 공개 저장소의 릴리스를 진행할 때는 clone한 체크아웃에서 기존 이력을 이어 간다. 제공하는 소스 ZIP에는 `.git` 이력이 없으므로, ZIP에서 독립적인 새 저장소를 만드는 경우에만 다음을 실행한다.
 
 ```bash
 git init -b main
@@ -44,20 +46,29 @@ wheel과 sdist를 깨끗한 가상환경에 설치하고 저장소 밖에서 `no
 
 검증용 임시 폴더와 실제 답안 결과는 공개 소스 묶음에 포함하지 않는다. `MANIFEST.in`은 wheel/sdist의 포함 범위를 정하고 실제 실행 raw·검수·개인 자료를 제외한다.
 
-## 2. 공개 예제로 실제 API 호출 확인
+### dev 검토와 구현 동결
+
+공개 예제와 비공개 dev 자료의 결과를 먼저 검토하고, 필요한 코드·프롬프트 변경을 적용한 뒤 관련 테스트와 dev 검증을 마친다. 비공개 입력·최초 채점·출력은 `data/private/`나 공개 저장소 밖에 보관한다. 공유 프롬프트를 수정했다면 그 영향을 받는 공개·비공개 dev 실험의 두 방식을 같은 입력과 모델·설정으로 다시 실행해 비교한다. 최종 test 자료로 프롬프트를 조정하지 않는다.
+
+README나 gold 판정만 수정하여 모델 입력·코드·프롬프트·실행 설정이 바뀌지 않았다면 유료 API를 다시 부를 필요는 없다. gold를 수정한 경우에는 평가 계산을 다시 실행한다. dev 검토를 끝내고 코드·프롬프트·패키지 설정을 동결한 다음, 아래의 최종 공개 live 증거를 만든다.
+
+## 2. 동결한 구현으로 공개 API 증거 생성
 
 `examples/ex-001/`의 자체 작성 문항과 답안만 사용한다. `.env` 또는 환경변수에 `ANTHROPIC_API_KEY`, `NONSUL_MODEL`을 설정한다.
 
+첫 실행 안내에서 현재 동결한 구현으로 최종 live 증거를 이미 만들었다면 아래의 유료 실행을 중복하지 않고 검증 명령부터 진행한다. 다음 실행 옵션은 첫 실행 안내의 설정과 같으며, 다른 모델을 사용할 때는 지원하는 설정을 확인한다.
+
 ```bash
-python scripts/live_smoke.py --model MODEL_ID --temperature 1
-python scripts/release_check.py --dist dist --require-live
+python scripts/live_smoke.py --model MODEL_ID \
+  --temperature 1 --max-tokens 16000 --timeout 180
+python scripts/release_check.py --require-live
 ```
 
 이 명령은 정답 a01·오답 a02를 두 방식으로 실제 실행한다. 루브릭이 3개인 현재 예제에서 각 답안의 `rubric`은 항목 3회와 전체 피드백 1회, `free`는 피드백·판정표 2회이므로, 재시도 없이도 총 **12회 API 요청**이 발생한다. 스키마 또는 일시 오류로 재시도하면 요청 수가 늘 수 있다. `--max-tokens`는 각 요청의 한도이며 전체 예산 한도가 아니다. 실패 시 부분 결과는 남지만 성공 manifest는 만들지 않는다.
 
 현재 기본 temperature는 1이다. 값을 바꾸려면 선택한 모델이 지원하는지 확인한다. [Anthropic 공식 안내](https://platform.claude.com/docs/en/about-claude/model-deprecations#api-parameter-deprecations)는 최신 일부 모델의 비기본 sampling 값 제한과 Python SDK 변경을 설명한다. 도구는 사용자가 지정한 값을 조용히 변경하지 않는다.
 
-모든 호출이 끝나면 `examples/ex-001/live/evidence.json`이 생성된다. 이 디렉터리는 기본적으로 Git에서 제외된다. manifest는 다음을 기록하고 공개 게이트는 다시 검증한다.
+모든 호출과 근거 검증이 성공하면 `examples/ex-001/live/evidence.json`이 생성된다. 릴리스 워크플로는 이 기본 경로를 검사한다. 기존 출력 디렉터리가 비어 있지 않으면 실행을 거부하므로, 재실행 시 이전 결과를 별도로 보관한 뒤 기본 경로를 비워 둔다. 이 디렉터리는 기본적으로 Git에서 제외된다. manifest는 다음을 기록하고 공개 게이트는 다시 검증한다.
 
 | 기록 | 검사 목적 |
 | --- | --- |
@@ -67,13 +78,13 @@ python scripts/release_check.py --dist dist --require-live
 | API 단계와 최종 유효 응답 | 단계 누락·데모·실패를 성공으로 세지 않음 |
 | 시각·선택적 Git commit | 실행 시점 기록; Git 미초기화 상태도 실행 가능 |
 
-`source_sha256`은 코드·프롬프트·패키지 메타데이터를 검사한다. 예제 결과를 추가하는 새 commit 자체는 이전의 실행을 무효화하지 않는다. 공개할 코드나 프롬프트를 변경했다면 예제를 다시 실행한다. 해시와 API 응답 로그는 감사 가능성을 높이지만, 제3자의 암호학적 호출 증명이나 수학적 정확도 인증은 아니다.
+`source_sha256`은 `pyproject.toml`과 `src/nonsul_review/`의 코드·프롬프트·리소스를 검사한다. 예제 결과나 문서를 추가하는 새 commit 자체는 이전의 실행을 무효화하지 않는다. `git_commit`은 실행 시점의 참고 기록이며, 현재 commit과의 일치를 요구하지 않는다. 공개할 코드·프롬프트·패키지 설정을 변경했다면 최종 공개 예제를 다시 실행한다. 해시와 API 응답 로그는 감사 가능성을 높이지만, 제3자의 암호학적 호출 증명이나 수학적 정확도 인증은 아니다.
 
 ### 실제 실행 결과 검토와 Git 추가
 
 모든 판정·인용·피드백과 raw 파일을 읽는다. 입력이 자체 작성 예제인지, 개인정보나 키가 없는지 확인한다. 실제 호출이 성공해도 판정의 정확성은 별도로 확인해야 한다. 결과를 수정해 모델이 옳게 판정한 것처럼 보이게 만들지 않는다. 잘못된 판정은 그대로 보관하고 알려진 한계로 기록한다.
 
-확인한 9개 파일만 명시적으로 추적한다.
+확인한 9개 파일만 명시적으로 추적한다. `ex-001-a0*.json`처럼 넓은 패턴은 실패 파일이나 추가 결과도 포함할 수 있으므로 사용하지 않는다.
 
 ```bash
 git add -f -- \
@@ -86,50 +97,74 @@ git add -f -- \
   examples/ex-001/live/ex-001-a02.rubric.raw.json \
   examples/ex-001/live/ex-001-a02.free.json \
   examples/ex-001/live/ex-001-a02.free.raw.json
-python scripts/release_check.py --dist dist --require-live --require-tracked
-git diff --cached --stat
 ```
 
 데모 결과·임의의 성공 표식은 `--require-live`를 통과할 수 없다. 키가 없거나 실제 예제가 실패한 상태에서는 코드 검토본으로 보관하고 v0.1.0 공개 완료로 표시하지 않는다.
 
 실제 공개 예제는 Git 저장소와 GitHub의 자동 소스 압축에 포함된다. wheel/sdist에는 공개 실행 raw를 포함하지 않으므로, API 로그가 필요한 검토자는 저장소의 `examples/ex-001/live/`를 확인한다.
 
+### 문서 정리와 최종 빌드
+
+실제 실행 결과를 검토한 뒤 README·CHANGELOG·릴리스 노트를 확인된 기록에 맞게 정리하고, 변경한 공개 파일만 이름을 지정해 stage한다. 릴리스 노트의 게시용 초안 표시도 실제 검증 상태에 맞게 갱신한다. 실행하지 않은 검증을 완료로 표시하지 않는다.
+
+예를 들어 README와 릴리스 노트를 갱신했다면 다음처럼 추가한다. 다른 공개 파일도 바뀌었다면 그 경로를 별도로 확인해 추가한다.
+
+```bash
+git add -- README.md docs/release-notes-v0.1.0.md
+```
+
+README는 패키지 메타데이터에도 들어가므로 최종 문서 수정 뒤 다시 빌드한다. 이전 배포물은 별도로 보관하고 깨끗한 `dist/`에서 다음을 실행한다.
+
+```bash
+python -m build
+python -m twine check dist/*
+python scripts/release_check.py --dist dist --require-live --require-tracked
+git diff --cached --name-only
+git diff --cached --stat
+```
+
+stage된 목록에 키·비공개 입력·비공개 결과가 없는지 확인한다. `--require-tracked`는 Git index에 포함되었는지 검사하며 commit·push 완료를 보장하지 않는다. 최종 공개 파일을 commit하고 그 commit의 CI를 확인하는 단계가 남아 있다.
+
 ## 3. GitHub 저장소·CI
 
-저장소가 없다면 인증된 GitHub CLI 또는 GitHub 웹 화면에서 생성한다. CLI 예시는 다음과 같다. 이미 원격 저장소가 있으면 새로 만들지 않고 기존 `origin`을 확인한다.
+공개 원격 저장소가 이미 있으므로 새 저장소를 만들지 않고 기존 `origin`을 확인한다. 소스 ZIP에서 시작했다면 이 저장소의 기존 이력을 clone해 이어 가는 것을 권장한다.
 
 ```bash
 gh auth status
+git remote -v
 git status --short
-gh repo create nonsul-review --private --source . --remote origin --push
 ```
 
-`--private`는 첫 검토를 비공개로 시작하는 예시다. 공개 저장소를 원하면 파일 검토를 마친 뒤 적절한 공개 범위를 선택한다. 이 프로젝트는 원격 주소가 실제로 만들어지기 전 README에 존재하지 않는 저장소 URL을 기재하지 않는다.
+위에서 검토한 변경이 stage되어 있는 경우에만 commit한다. 이미 동일한 파일이 commit되어 있으면 추가 commit을 만들 필요가 없다. `main`에서 준비한 공개 변경을 push한다.
 
-`.github/workflows/ci.yml`은 Python 3.10~3.14 Linux 테스트와 Python 3.12 Windows·macOS 테스트, lint, build, 설치한 wheel 리소스·데모 실행을 수행한다. 설정 파일을 작성했다는 사실과 GitHub에서 CI가 통과했다는 사실은 다르다. 푸시 후 Actions에서 실제 결과를 확인한다.
+```bash
+if ! git diff --cached --quiet; then
+  git commit -m "Prepare nonsul-review v0.1.0 pre-release"
+fi
+git push origin main
+```
+
+`.github/workflows/ci.yml`은 Python 3.10~3.14 Linux 테스트와 Python 3.12 Windows·macOS 테스트, lint, build, 설치한 wheel 리소스·데모 실행을 수행한다. push 후 Actions → CI에서 방금 올린 commit의 실행이 통과했는지 확인한다. 초기 CI 실행이 아니라 최종 문서와 증거가 포함된 commit을 확인한 뒤 태그를 만든다.
 
 API 키를 GitHub에 등록하지 않아도 CI를 실행할 수 있다. 일반 PR·push CI는 실제 API를 부르지 않는다.
 
 ## 4. GitHub v0.1.0 pre-release
 
-GitHub 저장소 Settings → Environments에 **`github-release`** 환경을 만들고, 사용할 브랜치·태그와 required reviewers를 설정한다. 워크플로 YAML만으로 외부 환경의 승인 규칙을 생성할 수는 없다.
+GitHub 저장소 Settings → Environments에서 **`github-release`** 환경과 필요한 승인 규칙을 확인·설정한다. 환경이나 required reviewers가 이미 설정되어 있다고 가정하지 않는다. 워크플로 YAML만으로 외부 환경의 승인 규칙을 생성할 수는 없다. 아래 실행은 workflow ref가 `main`이므로 배포 브랜치를 제한한다면 **브랜치 `main`을 허용**해야 한다. `tag` 입력은 환경의 실행 ref를 바꾸지 않는다. [GitHub 환경 규칙](https://docs.github.com/en/actions/reference/workflows-and-actions/deployments-and-environments)을 참고한다.
 
 현재 코드의 버전과 태그는 `0.1.0`, `v0.1.0`이다. 검증한 commit에 태그를 만든다. 이미 사용한 태그를 이동하거나 기존 릴리스 자산을 덮어쓰지 않는다.
 
 ```bash
-git add README.md CHANGELOG.md docs src tests scripts pyproject.toml MANIFEST.in .github
-git commit -m "Prepare nonsul-review v0.1.0 pre-release"
-git push origin main
 git tag -a v0.1.0 -m "nonsul-review v0.1.0 pre-release"
 git push origin v0.1.0
-gh workflow run github-release.yml -f tag=v0.1.0
+gh workflow run github-release.yml --ref main -f tag=v0.1.0
 ```
 
-처음 소스 저장소를 만들 때는 `LICENSE`, `.gitignore`, `.env.example`, `examples` 등 공개 파일도 초기 commit에 포함한다. 이미 제공된 Git 이력이 있다면 그 상태를 이어 간다.
+웹 화면에서는 **Actions → GitHub pre-release → Run workflow → Branch: main → tag: v0.1.0 → Run workflow** 순서다. 실행 브랜치와 `tag` 입력은 별개다. 태그 push만으로 게시되지는 않는다. 워크플로가 기본 브랜치에 있어야 하며 실행자는 저장소 write 권한이 필요하다. [GitHub 수동 실행 안내](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/manually-run-a-workflow)를 참고한다.
 
-워크플로는 지정한 태그의 CI, 태그·패키지 버전 일치, 배포물 검사와 실제 예제 게이트를 실행한 뒤 보호된 환경에서 게시한다. 게시 직전 원격 태그가 검증한 commit을 그대로 가리키는지도 확인한다. GitHub `pre-release` 표시를 켜고 `Latest`로 설정하지 않는다. `docs/release-notes-v0.1.0.md`가 게시할 노트다.
+워크플로는 지정한 태그의 CI, 태그·패키지 버전 일치, 배포물 검사와 실제 예제 게이트를 다시 실행한 뒤 설정된 환경 규칙에 따라 게시한다. 승인이 필요한 환경이면 해당 승인도 완료되어야 한다. 게시 직전 원격 태그가 검증한 commit을 그대로 가리키는지도 확인한다. GitHub `pre-release` 표시를 켜고 `Latest`로 설정하지 않는다. `docs/release-notes-v0.1.0.md`가 게시할 노트다.
 
-릴리스 노트는 준비본에서 **게시용 초안**으로 표시되어 있다. 실제 예제와 CI를 확인한 뒤 그 기록에 맞게 상태 문장을 갱신하고, 이 초안 표지를 제거한 commit을 태그로 사용한다. 실행하지 않은 검증을 완료로 바꾸지 않는다.
+태그를 만든 뒤 문서나 구현을 고쳐야 한다면 그대로 게시하지 말고 변경 범위에 필요한 검증부터 다시 진행한다. 이미 사용한 태그를 이동해 검증 기록을 덮어쓰지 않는다.
 
 수동으로 게시해야 한다면 같은 검증 이후 다음처럼 실행할 수 있다. 이 명령은 실제 외부 게시를 수행한다.
 
