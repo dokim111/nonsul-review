@@ -1,0 +1,38 @@
+{
+  "kind": "batch_manifest",
+  "version": "0.1.0",
+  "mode": "free",
+  "split": null,
+  "is_demo": true,
+  "created_at": "2026-09-28T22:59:22.365562+00:00",
+  "total_input_answers": 3,
+  "selected": 3,
+  "succeeded": 3,
+  "failed": 0,
+  "runs": [
+    {
+      "answer_id": "ex-001-a01",
+      "problem_id": "ex-001",
+      "mode": "free",
+      "status": "succeeded",
+      "result": "ex-001-a01.free.json",
+      "raw": "ex-001-a01.free.raw.json"
+    },
+    {
+      "answer_id": "ex-001-a02",
+      "problem_id": "ex-001",
+      "mode": "free",
+      "status": "succeeded",
+      "result": "ex-001-a02.free.json",
+      "raw": "ex-001-a02.free.raw.json"
+    },
+    {
+      "answer_id": "ex-001-a03",
+      "problem_id": "ex-001",
+      "mode": "free",
+      "status": "succeeded",
+      "result": "ex-001-a03.free.json",
+      "raw": "ex-001-a03.free.raw.json"
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+answer_id: ex-001-a01
+problem_id: ex-001
+is_alternative: false
+items:
+- rubric_id: R1
+  verdict: met
+  unresolved: false
+- rubric_id: R2
+  verdict: met
+  unresolved: false
+- rubric_id: R3
+  verdict: met
+  unresolved: false

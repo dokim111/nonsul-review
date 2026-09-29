@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "answer_id": "ex-001-a02",
+  "problem_id": "ex-001",
+  "mode": "rubric",
+  "status": "finalized",
+  "finalized_at": "2026-09-28T23:00:05.155517+00:00",
+  "source": {
+    "result_path": "../results/ex-001-a02.rubric.json",
+    "sha256": "c676cb551d656e487204a0d6edb163d0c28ff95536ef83e28d1409de4e24fa7d",
+    "canonical_sha256": "8f5e54366ef5e4f6fdbc5e520920aeba2c8083c18768f28fd284a29a9b53b924",
+    "review_path": "ex-001-a02.rubric.review.yaml",
+    "review_sha256": "2536ccdbfe0896136da56e9037f6d8d5cbcecd443cfa71aa35b1c16d3db97dac"
+  },
+  "items": [
+    {
+      "rubric_id": "R1",
+      "verdict_changed": false,
+      "feedback_changed": false,
+      "edit_level": "none",
+      "changes": {
+        "edit_level": {
+          "before": null,
+          "after": "none"
+        }
+      }
+    },
+    {
+      "rubric_id": "R2",
+      "verdict_changed": false,
+      "feedback_changed": true,
+      "edit_level": "minor",
+      "changes": {
+        "feedback": {
+          "before": "양변에서 1을 빼면 C=2입니다.",
+          "after": "1+C=3의 양변에서 1을 빼서 C=2를 구하세요. 수정한 상수를 최종 함수에도 반영하세요."
+        },
+        "edit_level": {
+          "before": null,
+          "after": "minor"
+        }
+      }
+    },
+    {
+      "rubric_id": "R3",
+      "verdict_changed": false,
+      "feedback_changed": false,
+      "edit_level": "none",
+      "changes": {
+        "edit_level": {
+          "before": null,
+          "after": "none"
+        }
+      }
+    }
+  ],
+  "overall_feedback": {
+    "changed": false,
+    "before": "적분은 타당하지만 경계 조건에서 상수 계산이 틀렸습니다. C=2로 고치고 최종 함수를 두 조건에 대입해 확인하세요.",
+    "after": "적분은 타당하지만 경계 조건에서 상수 계산이 틀렸습니다. C=2로 고치고 최종 함수를 두 조건에 대입해 확인하세요."
+  },
+  "summary": {
+    "item_count": 3,
+    "content_changed_item_count": 1,
+    "verdict_changed_count": 0,
+    "feedback_changed_count": 1,
+    "evidence_changed_count": 0,
+    "reason_changed_count": 0,
+    "review_flags_resolved_count": 0,
+    "overall_feedback_changed": false,
+    "edit_levels": {
+      "none": 2,
+      "minor": 1,
+      "major": 0,
+      "unrated": 0
+    }
+  }
+}

@@ -1,0 +1,53 @@
+# Credentials and local configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials*.json
+
+# Learner answers and original human ratings remain outside the public repo.
+data/private/
+private/
+
+# Run artifacts may contain answer text. Public examples are added explicitly.
+/results/
+/results-*/
+/live/
+examples/*/live/
+*.raw.json
+*.failure.json
+*.review.yaml
+*.changes.json
+*.final.json
+
+# Python/build/editor output
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+.tox/
+.mypy_cache/
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.tmp
+
+# Do not blanket-ignore example results: checked-in demos are intentional.
+
+# Checked-in public examples
+!examples/**/*.raw.json
+!examples/**/*.review.yaml
+!examples/**/*.changes.json
+!examples/**/*.final.json

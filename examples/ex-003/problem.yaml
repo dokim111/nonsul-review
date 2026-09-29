@@ -1,0 +1,62 @@
+id: ex-003
+title: 뉴턴 방법으로 √3에 다가가는 수열 — 하한, 단조성, 수렴과 닫힌꼴
+prompt: |
+  함수 $F(x)=x^2-3$에 대하여 수열 $\{x_j\}$를
+  $x_0=2,\quad x_{j+1}=x_j-\dfrac{F(x_j)}{F'(x_j)}\ (j=0,1,2,\ldots)$
+  로 정의한다. $x_j\ne0$이면 $x_{j+1}=\dfrac12\left(x_j+\dfrac{3}{x_j}\right)$이다.
+
+  (1) $x_1$, $x_2$를 구하시오.
+
+  (2) 모든 정수 $j\ge0$에 대하여 $x_j$가 정의되고 $x_j>\sqrt3$임을 증명하시오.
+  또 수열 $\{x_j\}$가 감소함을 보이고, $\sqrt3$으로 수렴함을 논술하시오.
+
+  (3) $q_j=\dfrac{x_j-\sqrt3}{x_j+\sqrt3}$이라 할 때 $q_{j+1}=q_j^{\,2}$임을 보이고,
+  $q_j$를 $j$에 대한 식으로 나타내시오.
+model_answer: |
+  (1) $x_1=2-\dfrac{4-3}{4}=\dfrac74$, $x_2=\dfrac74-\dfrac{49/16-3}{7/2}=\dfrac74-\dfrac1{56}=\dfrac{97}{56}$이다.
+
+  (2) $x_{j+1}-\sqrt3=\dfrac{x_j^2+3}{2x_j}-\sqrt3=\dfrac{(x_j-\sqrt3)^2}{2x_j}$이다.
+  $x_0=2>\sqrt3$이다. $x_j>\sqrt3$이면 $x_j>0$이므로 $x_{j+1}$이 정의되고,
+  $x_j\ne\sqrt3$이므로 $x_{j+1}-\sqrt3>0$이다. 귀납법에 의해 모든 $j$에서 $x_j$가 정의되고 $x_j>\sqrt3$이다.
+  감소: $x_{j+1}-x_j=\dfrac{3-x_j^2}{2x_j}<0$이다.
+  수렴: $e_j=x_j-\sqrt3>0$이라 하면 감소하므로 $e_j\le e_0=2-\sqrt3$이고 $x_j>\sqrt3$이므로
+  $e_{j+1}=e_j\cdot\dfrac{e_j}{2x_j}\le e_j\cdot\dfrac{2-\sqrt3}{2\sqrt3}\le\dfrac12 e_j$이다.
+  따라서 $0<e_j\le(2-\sqrt3)\left(\dfrac12\right)^j$이고, 샌드위치 정리에 의해 $e_j\to0$, 즉 $x_j\to\sqrt3$이다.
+
+  (3) 같은 방법으로 $x_{j+1}+\sqrt3=\dfrac{(x_j+\sqrt3)^2}{2x_j}$이다. 두 식을 나누면 $q_{j+1}=q_j^{\,2}$이다.
+  $q_0=\dfrac{2-\sqrt3}{2+\sqrt3}=(2-\sqrt3)^2=7-4\sqrt3$이고, 귀납법에 의해
+  $q_j=q_0^{\,2^j}=(7-4\sqrt3)^{2^j}=(2-\sqrt3)^{2^{j+1}}$이다.
+rubric:
+  - id: R1
+    step: 첫 두 항의 계산
+    criteria: $x_1=\dfrac74$, $x_2=\dfrac{97}{56}$을 올바른 계산 과정과 함께 구한다.
+    partial: 두 값 중 하나만 맞거나, 값은 맞지만 계산 과정이 제시되지 않은 경우
+  - id: R2
+    step: 정의 가능성과 하한의 귀납적 증명
+    criteria: |
+      $x_{j+1}-\sqrt3=\dfrac{(x_j-\sqrt3)^2}{2x_j}$ 등으로 귀납 단계를 보이고,
+      $x_j>0$이어서 다음 항이 정의된다는 점과 부등호가 엄격한 이유($x_j\ne\sqrt3$)를 밝힌다.
+    partial: |
+      부등식의 방향은 맞지만 귀납 구조, 다음 항의 정의 가능성(분모가 0이 아님),
+      엄격한 부등호의 근거 중 하나가 빠진 경우
+  - id: R3
+    step: 감소와 수렴의 논증
+    criteria: |
+      $x_{j+1}-x_j=\dfrac{3-x_j^2}{2x_j}<0$으로 감소를 보이고, 오차의 기하급수적 상계와 샌드위치 정리,
+      단조수렴 정리와 극한값 결정, 또는 (3)의 닫힌꼴 등 타당한 근거로 극한이 $\sqrt3$임을 보인다.
+    partial: |
+      감소는 보였지만, 아래로 $\sqrt3$에 유계이고 감소한다는 사실만으로 극한이 $\sqrt3$이라고
+      결론하는 등 극한값의 근거가 부족한 경우
+  - id: R4
+    step: 비의 점화식과 닫힌꼴
+    criteria: |
+      $x_{j+1}\pm\sqrt3=\dfrac{(x_j\pm\sqrt3)^2}{2x_j}$ 등으로 $q_{j+1}=q_j^{\,2}$를 보이고,
+      $q_j=q_0^{\,2^j}$와 $q_0=7-4\sqrt3$을 이용해 $q_j=(7-4\sqrt3)^{2^j}$ 또는 동치인 식을 얻는다.
+    partial: 관계식 $q_{j+1}=q_j^{\,2}$는 보였지만 닫힌꼴의 지수나 $q_0$의 값이 틀린 경우
+alternatives: |
+  (1) $x_{j+1}=\dfrac12\left(x_j+\dfrac3{x_j}\right)$로 직접 계산해도 인정한다.
+  (2) 수렴은 "아래로 유계인 감소수열은 수렴한다"를 이용하고, 극한 $L$이 $L\ge\sqrt3>0$과
+  $L=\dfrac12\left(L+\dfrac3L\right)$을 만족함에서 $L=\sqrt3$을 결정해도 인정한다.
+  이때 $L\ge\sqrt3$(또는 $L>0$)으로 $L=-\sqrt3$을 배제해야 한다.
+  (3)의 닫힌꼴에서 $x_j=\sqrt3\,\dfrac{1+q_j}{1-q_j}$와 $0<q_0<1$로 수렴을 보이는 풀이도 인정한다.
+  (3) $q_j=(2-\sqrt3)^{2^{j+1}}$처럼 동치인 형태로 나타내도 인정한다.

@@ -1,0 +1,6 @@
+PROCEDURE: free-v1, holistic feedback stage.
+
+First review the answer as a whole, using the complete problem, model answer, full rubric, and accepted alternatives. Write coherent overall feedback based on mathematical reasoning and the actual answer. You have not been given item judgements. Do not start by emitting a rubric table or sequential item verdicts. Identify the strongest aspects, the important mathematical gaps, and any uncertainty that requires instructor attention. Do not produce a score.
+
+Return exactly one JSON object:
+{"overall_feedback":"..."}

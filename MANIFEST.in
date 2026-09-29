@@ -1,0 +1,18 @@
+include README.md LICENSE pyproject.toml CHANGELOG.md CONTRIBUTING.md
+include .env.example .gitignore
+recursive-include src/nonsul_review *.py *.txt *.json
+recursive-include examples *.yaml *.md *.json
+recursive-include docs *.md
+recursive-include tests *.py
+recursive-include scripts *.py
+recursive-include .github *.yml *.yaml
+prune data
+prune private
+prune results
+prune live
+prune examples/*/live
+global-exclude .env
+global-exclude .env.local
+global-exclude .env.production
+global-exclude *.pem *.key *.raw.json *.failure.json *.review.yaml *.changes.json *.final.json
+global-exclude __pycache__ *.py[cod] .DS_Store

@@ -1,0 +1,141 @@
+{
+  "schema_version": "1.0",
+  "status": "succeeded",
+  "provider": "demo",
+  "model": "demo-fixture",
+  "is_demo": true,
+  "mode": "rubric",
+  "prompt_version": "rubric-v1",
+  "input_sha256": "20496181e461763cf388a5b6266f441b557d7113ab003ee6e35558186038118c",
+  "config_sha256": "7530e6db9cc3bebdf2212ff6db14cfcaec2ba897c2035656aa371e23eb7dea54",
+  "created_at": "2026-09-28T22:59:22.201563+00:00",
+  "settings": {
+    "temperature": 1.0,
+    "max_tokens": 4096,
+    "timeout": 60.0,
+    "max_retries": 2
+  },
+  "stages": [
+    {
+      "stage": "rubric:R1",
+      "prompt_file": "rubric-item-v1.txt",
+      "prompt_sha256": "675301c83edd9b17327b9567ab8908ddc80a3685a39735c0d3cbb069b5d48531",
+      "attempts": [
+        {
+          "attempt": 1,
+          "response": {
+            "id": "demo-authored-fixture",
+            "type": "message",
+            "role": "assistant",
+            "model": "demo-fixture",
+            "content": [
+              {
+                "type": "text",
+                "text": "{\"rubric_id\": \"R1\", \"verdict\": \"met\", \"evidence\": \"$f(x)-f(1)=\\\\int_1^x f'(t)\\\\,dt=\\\\int_1^x2t\\\\,dt=x^2-1$이다.\", \"reason\": \"정적분과 미적분의 기본정리를 이용하여 타당한 함수 관계식을 얻었다.\", \"feedback\": \"이 대안 풀이에서는 적분상수 C를 별도로 쓸 필요가 없습니다.\", \"needs_review\": false}"
+              }
+            ],
+            "stop_reason": "end_turn",
+            "stop_sequence": null,
+            "usage": {
+              "input_tokens": 0,
+              "output_tokens": 0
+            }
+          },
+          "valid": true
+        }
+      ]
+    },
+    {
+      "stage": "rubric:R2",
+      "prompt_file": "rubric-item-v1.txt",
+      "prompt_sha256": "675301c83edd9b17327b9567ab8908ddc80a3685a39735c0d3cbb069b5d48531",
+      "attempts": [
+        {
+          "attempt": 1,
+          "response": {
+            "id": "demo-authored-fixture",
+            "type": "message",
+            "role": "assistant",
+            "model": "demo-fixture",
+            "content": [
+              {
+                "type": "text",
+                "text": "{\"rubric_id\": \"R2\", \"verdict\": \"met\", \"evidence\": \"$f(1)=3$이므로 $f(x)=3+x^2-1=x^2+2$이다.\", \"reason\": \"정적분 관계식에 주어진 함숫값을 대입하여 함수를 정확하게 결정했다.\", \"feedback\": \"기준점의 함숫값을 반영한 과정을 유지하세요.\", \"needs_review\": false}"
+              }
+            ],
+            "stop_reason": "end_turn",
+            "stop_sequence": null,
+            "usage": {
+              "input_tokens": 0,
+              "output_tokens": 0
+            }
+          },
+          "valid": true
+        }
+      ]
+    },
+    {
+      "stage": "rubric:R3",
+      "prompt_file": "rubric-item-v1.txt",
+      "prompt_sha256": "675301c83edd9b17327b9567ab8908ddc80a3685a39735c0d3cbb069b5d48531",
+      "attempts": [
+        {
+          "attempt": 1,
+          "response": {
+            "id": "demo-authored-fixture",
+            "type": "message",
+            "role": "assistant",
+            "model": "demo-fixture",
+            "content": [
+              {
+                "type": "text",
+                "text": "{\"rubric_id\": \"R3\", \"verdict\": \"met\", \"evidence\": \"구한 함수는 $f'(x)=2x$이고 $f(1)=1+2=3$이므로 두 조건을 만족한다.\", \"reason\": \"정확한 최종 함수에 대해 도함수와 경계 조건을 모두 확인했다.\", \"feedback\": \"두 조건을 모두 확인한 검증이 충분합니다.\", \"needs_review\": false}"
+              }
+            ],
+            "stop_reason": "end_turn",
+            "stop_sequence": null,
+            "usage": {
+              "input_tokens": 0,
+              "output_tokens": 0
+            }
+          },
+          "valid": true
+        }
+      ]
+    },
+    {
+      "stage": "rubric:feedback",
+      "prompt_file": "rubric-feedback-v1.txt",
+      "prompt_sha256": "6c04e38cffa8c5ef8d34842dd1c7cfa90f2df601fab8103b5038bc8e7694f85d",
+      "attempts": [
+        {
+          "attempt": 1,
+          "response": {
+            "id": "demo-authored-fixture",
+            "type": "message",
+            "role": "assistant",
+            "model": "demo-fixture",
+            "content": [
+              {
+                "type": "text",
+                "text": "{\"overall_feedback\": \"정적분을 이용한 올바른 대안 풀이입니다. 적분상수를 도입하지 않아도 모든 루브릭을 충족합니다.\"}"
+              }
+            ],
+            "stop_reason": "end_turn",
+            "stop_sequence": null,
+            "usage": {
+              "input_tokens": 0,
+              "output_tokens": 0
+            }
+          },
+          "valid": true
+        }
+      ]
+    }
+  ],
+  "prompt_sha256": {
+    "common-v1.txt": "cdc6bb63ab6f1921612feab6ae0356e81250e459de5206e6aafdf4ce5b218d3e",
+    "rubric-item-v1.txt": "d3ee9e1ca7c6013e0da7a2aabd8ee40519d3424ce499232f656ca215ca18ceea",
+    "rubric-feedback-v1.txt": "6a43724d94ec792fa06e2866d949425795b48218d4fad9a522263dfd5002843b"
+  }
+}

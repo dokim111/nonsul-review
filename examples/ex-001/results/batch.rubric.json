@@ -1,0 +1,38 @@
+{
+  "kind": "batch_manifest",
+  "version": "0.1.0",
+  "mode": "rubric",
+  "split": null,
+  "is_demo": true,
+  "created_at": "2026-09-28T22:59:22.203234+00:00",
+  "total_input_answers": 3,
+  "selected": 3,
+  "succeeded": 3,
+  "failed": 0,
+  "runs": [
+    {
+      "answer_id": "ex-001-a01",
+      "problem_id": "ex-001",
+      "mode": "rubric",
+      "status": "succeeded",
+      "result": "ex-001-a01.rubric.json",
+      "raw": "ex-001-a01.rubric.raw.json"
+    },
+    {
+      "answer_id": "ex-001-a02",
+      "problem_id": "ex-001",
+      "mode": "rubric",
+      "status": "succeeded",
+      "result": "ex-001-a02.rubric.json",
+      "raw": "ex-001-a02.rubric.raw.json"
+    },
+    {
+      "answer_id": "ex-001-a03",
+      "problem_id": "ex-001",
+      "mode": "rubric",
+      "status": "succeeded",
+      "result": "ex-001-a03.rubric.json",
+      "raw": "ex-001-a03.rubric.raw.json"
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+PROCEDURE: rubric-v1, final feedback stage.
+
+The individual rubric judgements are available as workflow.judgements. With the complete original problem and answer still available, synthesize useful overall feedback for the instructor to review. Prioritize the most consequential mathematical gaps, acknowledge valid reasoning or accepted alternatives, and identify uncertainty requiring instructor review. Do not invent additional errors, silently revise item verdicts, or produce a score.
+
+Return exactly one JSON object:
+{"overall_feedback":"..."}

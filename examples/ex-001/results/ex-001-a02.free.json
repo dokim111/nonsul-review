@@ -1,0 +1,56 @@
+{
+  "answer_id": "ex-001-a02",
+  "problem_id": "ex-001",
+  "mode": "free",
+  "items": [
+    {
+      "rubric_id": "R1",
+      "verdict": "met",
+      "evidence": "$f'(x)=2x$를 적분하면 $f(x)=x^2+C$이다.",
+      "reason": "적분상수를 포함한 함수 일반형을 정확하게 세웠다.",
+      "feedback": "일반형을 세운 과정은 타당합니다.",
+      "needs_review": false
+    },
+    {
+      "rubric_id": "R2",
+      "verdict": "partial",
+      "evidence": "$f(1)=1+C=3$이므로 $C=3$이다.",
+      "reason": "경계 조건을 대입했으나 1+C=3에서 C=3으로 잘못 계산했다.",
+      "feedback": "양변에서 1을 빼면 C=2입니다.",
+      "needs_review": false
+    },
+    {
+      "rubric_id": "R3",
+      "verdict": "not_met",
+      "evidence": "따라서 $f(x)=x^2+3$이다.",
+      "reason": "잘못된 상수로 최종 함수가 달라졌고 두 조건의 확인도 생략했다.",
+      "feedback": "f(x)=x²+2로 수정한 뒤 도함수와 f(1)=3을 각각 확인하세요.",
+      "needs_review": false
+    }
+  ],
+  "overall_feedback": "적분은 타당하지만 경계 조건에서 상수 계산이 틀렸습니다. C=2로 고치고 최종 함수를 두 조건에 대입해 확인하세요.",
+  "meta": {
+    "provider": "demo",
+    "is_demo": true,
+    "model": "demo-fixture",
+    "response_models": [
+      "demo-fixture"
+    ],
+    "prompt_version": "free-v1",
+    "prompt_sha256": {
+      "common-v1.txt": "cdc6bb63ab6f1921612feab6ae0356e81250e459de5206e6aafdf4ce5b218d3e",
+      "free-feedback-v1.txt": "edb9a273201e3c19e68b0d8f8841379a90ba56c98b44c686152bebac6ce6deb4",
+      "free-table-v1.txt": "9adf3bfcdcbe2b1af8d96cf1631f623f2ba658ecb3ed6a01f0b51a0cbcbe646c"
+    },
+    "temperature": 1.0,
+    "max_tokens": 4096,
+    "timeout": 60.0,
+    "max_retries": 2,
+    "config_sha256": "7530e6db9cc3bebdf2212ff6db14cfcaec2ba897c2035656aa371e23eb7dea54",
+    "input_sha256": "5a95bf419ea8f763939afab0bd2fe200f57127921ec3f28a2581c208159befbf",
+    "answer_body_sha256": "a978d3c08bd586de6eb1001272bae1086bdc44fd0408a0b685189a0abeadd929",
+    "created_at": "2026-09-28T22:59:22.362847+00:00",
+    "calls": 2,
+    "retry_count": 0
+  }
+}

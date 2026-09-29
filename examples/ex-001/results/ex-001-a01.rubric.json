@@ -1,0 +1,56 @@
+{
+  "answer_id": "ex-001-a01",
+  "problem_id": "ex-001",
+  "mode": "rubric",
+  "items": [
+    {
+      "rubric_id": "R1",
+      "verdict": "met",
+      "evidence": "$f'(x)=2x$를 적분하면 $f(x)=x^2+C$이다.",
+      "reason": "도함수 조건을 적분하여 적분상수를 포함한 일반형을 구했다.",
+      "feedback": "적분상수를 명시한 관계식을 유지하세요.",
+      "needs_review": false
+    },
+    {
+      "rubric_id": "R2",
+      "verdict": "met",
+      "evidence": "$f(1)=1+C=3$이므로 $C=2$이다.",
+      "reason": "경계 조건을 정확히 대입하여 상수 2를 구했다.",
+      "feedback": "경계 조건 대입 과정이 명확합니다.",
+      "needs_review": false
+    },
+    {
+      "rubric_id": "R3",
+      "verdict": "met",
+      "evidence": "따라서 $f(x)=x^2+2$이다.\n이 함수의 도함수는 $2x$이고 $f(1)=1+2=3$이므로 두 조건을 만족한다.",
+      "reason": "최종 함수를 맞게 제시하고 두 조건을 모두 확인했다.",
+      "feedback": "최종 함수와 검증을 함께 제시한 구성을 유지하세요.",
+      "needs_review": false
+    }
+  ],
+  "overall_feedback": "도함수 적분, 경계 조건 적용, 두 조건 검증이 모두 타당합니다.",
+  "meta": {
+    "provider": "demo",
+    "is_demo": true,
+    "model": "demo-fixture",
+    "response_models": [
+      "demo-fixture"
+    ],
+    "prompt_version": "rubric-v1",
+    "prompt_sha256": {
+      "common-v1.txt": "cdc6bb63ab6f1921612feab6ae0356e81250e459de5206e6aafdf4ce5b218d3e",
+      "rubric-item-v1.txt": "d3ee9e1ca7c6013e0da7a2aabd8ee40519d3424ce499232f656ca215ca18ceea",
+      "rubric-feedback-v1.txt": "6a43724d94ec792fa06e2866d949425795b48218d4fad9a522263dfd5002843b"
+    },
+    "temperature": 1.0,
+    "max_tokens": 4096,
+    "timeout": 60.0,
+    "max_retries": 2,
+    "config_sha256": "7530e6db9cc3bebdf2212ff6db14cfcaec2ba897c2035656aa371e23eb7dea54",
+    "input_sha256": "3ba333711d169f88616abc22a633ad3059bc0f6abfdc55d9b9ce6d3141cac349",
+    "answer_body_sha256": "ab6621a29bff4edfa15168dc1149591d1f0aa5cf5416b42e67b4f3c732a6ca83",
+    "created_at": "2026-09-28T22:59:22.196657+00:00",
+    "calls": 4,
+    "retry_count": 0
+  }
+}
