@@ -1,0 +1,57 @@
+{
+  "answer_id": "ex-001-a01",
+  "problem_id": "ex-001",
+  "mode": "rubric",
+  "items": [
+    {
+      "rubric_id": "R1",
+      "verdict": "met",
+      "evidence": "$f'(x)=2x$를 적분하면 $f(x)=x^2+C$이다.",
+      "reason": "도함수 조건 $f'(x)=2x$를 적분하여 적분상수 $C$를 포함한 관계식 $f(x)=x^2+C$를 얻었다. 적분 방향과 적분상수 처리가 모두 올바르므로 기준을 만족한다.",
+      "feedback": "도함수 조건을 적분하면서 적분상수 $C$를 빠뜨리지 않고 $f(x)=x^2+C$를 정확히 얻었습니다. 잘하셨습니다.",
+      "needs_review": false
+    },
+    {
+      "rubric_id": "R2",
+      "verdict": "met",
+      "evidence": "$f(1)=1+C=3$이므로 $C=2$이다.",
+      "reason": "앞 단계에서 얻은 $f(x)=x^2+C$에 $x=1$을 대입하여 $1+C=3$을 세우고 $C=2$를 올바르게 구했다. 경계 조건을 정확히 반영했으며 계산 오류가 없다.",
+      "feedback": "주어진 조건 $f(1)=3$을 일반해에 대입해 적분상수 $C=2$를 정확하게 구했습니다.",
+      "needs_review": false
+    },
+    {
+      "rubric_id": "R3",
+      "verdict": "met",
+      "evidence": "이 함수의 도함수는 $2x$이고 $f(1)=1+2=3$이므로 두 조건을 만족한다.",
+      "reason": "최종 함수 $f(x)=x^2+2$를 제시했다. 이어서 이 함수의 도함수가 $2x$임과 $f(1)=1+2=3$임을 각각 명시하여 두 조건을 모두 확인했다. 기준을 충족한다.",
+      "feedback": "구한 함수 $f(x)=x^2+2$를 명확히 제시했습니다. 도함수가 $2x$라는 조건과 $f(1)=3$이라는 조건도 각각 직접 확인하여 풀이를 잘 마무리했습니다.",
+      "needs_review": false
+    }
+  ],
+  "overall_feedback": "풀이 전체가 논리적으로 완결되어 있습니다. 도함수 조건 $f'(x)=2x$를 적분하면서 적분상수 $C$를 빠뜨리지 않고 $f(x)=x^2+C$를 얻었습니다. 이어서 $f(1)=3$을 대입해 $1+C=3$에서 $C=2$를 정확히 구했고, 최종 함수 $f(x)=x^2+2$를 명확히 제시했습니다. 마지막으로 이 함수의 도함수가 $2x$이고 $f(1)=1+2=3$임을 각각 직접 확인하여 문제에서 요구한 두 조건의 검증까지 빠짐없이 마쳤습니다. 계산 오류나 빠진 단계가 없는 깔끔한 풀이입니다.",
+  "review_flags": [],
+  "meta": {
+    "provider": "anthropic",
+    "is_demo": false,
+    "model": "claude-opus-5-5",
+    "response_models": [
+      "claude-opus-5-5"
+    ],
+    "prompt_version": "rubric-v2",
+    "prompt_sha256": {
+      "common-v2.txt": "485c99038b2d8eb9a020b64dcbdf791906d030434f19342e0110aae544d8b63e",
+      "rubric-item-v2.txt": "56c9d28ac56a5d9743abe842107905a006abad034c904f4ce672e439a5c49024",
+      "rubric-feedback-v2.txt": "30661f9784e61a385ae659afd1411fd5d65b461a1f18a76f9ae8c5a63d95ca37"
+    },
+    "temperature": 1.0,
+    "max_tokens": 16000,
+    "timeout": 180.0,
+    "max_retries": 2,
+    "config_sha256": "00c9e9fb11cc5f5759342f13e032bfd5e29333a4d9064d4464734d2b9ed83147",
+    "input_sha256": "3ba333711d169f88616abc22a633ad3059bc0f6abfdc55d9b9ce6d3141cac349",
+    "answer_body_sha256": "ab6621a29bff4edfa15168dc1149591d1f0aa5cf5416b42e67b4f3c732a6ca83",
+    "created_at": "2026-09-29T08:46:06.239631+00:00",
+    "calls": 4,
+    "retry_count": 0
+  }
+}

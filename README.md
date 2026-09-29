@@ -6,7 +6,7 @@
 
 ## 현재 상태
 
-**버전 `0.1.0`의 소스 코드를 [GitHub](https://github.com/dokim111/nonsul-review)에 공개했으며, [초기 공개 커밋의 GitHub Actions CI](https://github.com/dokim111/nonsul-review/actions/runs/36523220236) 8개 작업을 모두 통과했다(2026-09-29). 실제 API 검증, GitHub pre-release 게시, PyPI 배포는 이후 수행한다.** 원 명세의 v0.1~v0.3 기능을 하나의 검토 가능한 코드베이스에 구현했다. 코드 구현, 오프라인 검증, 실제 API 검증, 릴리스 게시 여부는 구별한다.
+**버전 `0.1.0`의 소스 코드를 [GitHub](https://github.com/dokim111/nonsul-review)에 공개했으며, [v2 구현 커밋의 GitHub Actions CI](https://github.com/dokim111/nonsul-review/actions/runs/36540313464)를 통과했다. 2026-09-29에 Opus 5.5와 검수 절차 v2로 `ex-001`의 실제 API 실행 및 결과 대조 검토를 완료했다. GitHub pre-release 게시와 PyPI 배포는 별도 단계다.** [공개 실행 증거](examples/ex-001/live/evidence.json)에는 네 실행의 결과·raw와 코드·프롬프트·입력 해시를 연결해 두었다. dev 검증 결과와 남은 한계는 [릴리스 노트](docs/release-notes-v0.1.0.md)에 기록했다.
 
 | 구분 | 이 코드베이스에 포함된 내용 |
 | --- | --- |
@@ -16,13 +16,12 @@
 | 강사 검수 | 검수 YAML, 수정 후 확정, 원본과 확정본의 변경 기록 |
 | 평가 | 최초 채점 간 일치도, 모델-평가자 일치도, 오류 탐지, 대안 풀이 오판 지적 |
 | 배포 준비 | 설치 가능한 wheel/sdist, 테스트, CI, 수동 GitHub pre-release·PyPI 워크플로 |
-| 공개 예제 | 자체 출제 문항 3개. `ex-001`은 형식 확인용 최소 예제와 **사람이 작성한 데모 결과**, `ex-002`·`ex-003`은 수리논술 수준 문항과 정답·오답·대안 풀이 답안 |
+| 공개 예제 | 자체 출제 문항 3개. `ex-001`은 형식 확인용 최소 예제, **사람이 작성한 데모 결과**와 별도 `live/`의 **실제 API 결과**, `ex-002`·`ex-003`은 수리논술 수준 문항과 정답·오답·대안 풀이 답안 |
 
 다음은 이후 수행할 일이다.
 
-- 계정에서 사용할 수 있는 모델로 실제 API 예제를 실행하고, 인용·판정·원본 응답을 검토한다.
 - 독립적으로 얻은 평가자 최초 채점과 합의 판정으로 평가셋을 검증한다.
-- 실제 API 공개 기준을 통과하고 실행 결과를 검토한 뒤, `v0.1.0`을 GitHub **pre-release**로 게시한다.
+- 공개 증거를 포함한 최종 커밋의 CI와 릴리스 검사를 확인한 뒤, `v0.1.0`을 GitHub **pre-release**로 게시한다.
 - PyPI의 프로젝트 이름·Trusted Publisher를 설정하고 배포를 진행한다. 현재 `pip install nonsul-review`의 성공을 보장하지 않는다.
 
 `--demo`는 제공된 예제의 처리 흐름을 확인하는 기능이다. API를 부르지 않으며 결과에 `is_demo: true`를 기록한다. 데모 수치를 실제 모델 성능이나 평가자 일치도 연구 결과로 해석하면 안 된다. 실제 호출을 확인하는 공개 게이트는 데모 결과를 거부한다.
@@ -265,7 +264,7 @@ python scripts/release_check.py --dist dist
 실제 API 공개 예제는 다음과 같이 별도로 실행한다. 환경변수 또는 `.env`에 키와 모델 ID가 있어야 한다.
 
 ```bash
-python scripts/live_smoke.py --model MODEL_ID
+python scripts/live_smoke.py --model MODEL_ID --prompt-set v2
 python scripts/release_check.py --dist dist --require-live
 ```
 

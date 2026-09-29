@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased — review procedure v2
+## 0.1.0 — pre-release candidate (2026-09-29)
 
 ### Added
 
@@ -8,15 +8,21 @@
 - `review_flags` returned by each procedure's final stage without extra API calls. Flags mark items `needs_review`, never change verdicts or reasons, are shown read-only in review YAML, preserved by `finalize`, and checked against the raw final response by the live release gate.
 - `docs/review-procedure-v2.md` describing the changes, flag rules, exploratory evaluation fields, and naming of reruns.
 
+### Verified
+
+- Public v2 live evidence for `ex-001` a01/a02 in both modes: four results, 12 successful API requests, zero retries, and 12/12 verdicts matching the example criteria. The nine evidence files are preserved with their original content.
+- Original-input dev comparison remains 94/96 for both v1 and v2; revised-input confirmation is separately 32/32. See the release notes for limitations.
+- The v2 implementation commit passed GitHub CI. Final evidence and release checks remain required for publication.
+
 ### Changed
 
 - The live release gate requires v2 evidence. Paired-mode evaluation requires both modes to use the same prompt set and common prompt.
 - The Python `RunConfig` default stays `v1` so that existing callers and v1 records are unaffected.
 
 
-## 0.1.0 — pre-release preparation (2026-09-29)
+## Initial implementation included in 0.1.0
 
-This entry describes the prepared source tree, not a completed GitHub or PyPI publication.
+The source is public on GitHub. GitHub Release publication and PyPI distribution are separate steps.
 
 ### Added
 
@@ -44,8 +50,7 @@ This entry describes the prepared source tree, not a completed GitHub or PyPI pu
 
 ### Still required before publication
 
-- Run and inspect real Anthropic API examples using an authorized key/model.
-- Register the actual GitHub repository and execute its CI.
+- Confirm CI for the final evidence/documentation commit before tagging.
 - Publish `v0.1.0` with the GitHub pre-release flag after release gates pass.
 - Register the PyPI project/Trusted Publisher and separately publish an intended package version.
 - Obtain independent human ratings for meaningful real evaluation; public fixtures are demonstrations only.

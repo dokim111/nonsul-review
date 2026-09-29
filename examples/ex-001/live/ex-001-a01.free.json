@@ -1,0 +1,57 @@
+{
+  "answer_id": "ex-001-a01",
+  "problem_id": "ex-001",
+  "mode": "free",
+  "items": [
+    {
+      "rubric_id": "R1",
+      "verdict": "met",
+      "evidence": "$f'(x)=2x$를 적분하면 $f(x)=x^2+C$이다.",
+      "reason": "도함수 조건 $f'(x)=2x$를 적분하여 적분상수를 포함한 관계식 $f(x)=x^2+C$를 얻었다. 모범답안과 같은 방법이며 적분상수도 빠지지 않았다.",
+      "feedback": "도함수 조건을 적분하여 적분상수를 포함한 $f(x)=x^2+C$를 올바르게 얻었습니다.",
+      "needs_review": false
+    },
+    {
+      "rubric_id": "R2",
+      "verdict": "met",
+      "evidence": "$f(1)=1+C=3$이므로 $C=2$이다.",
+      "reason": "경계 조건 $f(1)=3$을 대입하여 $1+C=3$을 세우고 $C=2$를 정확히 구했다. 계산 오류는 없다.",
+      "feedback": "$f(1)=3$을 대입해 $C=2$를 정확히 구했습니다.",
+      "needs_review": false
+    },
+    {
+      "rubric_id": "R3",
+      "verdict": "met",
+      "evidence": "이 함수의 도함수는 $2x$이고 $f(1)=1+2=3$이므로 두 조건을 만족한다.",
+      "reason": "$f(x)=x^2+2$를 제시했다. 이어서 도함수가 $2x$라는 조건과 $f(1)=1+2=3$이라는 조건을 모두 명시적으로 확인했다. 따라서 기준을 완전히 만족한다.",
+      "feedback": "구한 함수 $f(x)=x^2+2$가 도함수 조건과 $f(1)=3$을 모두 만족함을 직접 확인했습니다.",
+      "needs_review": false
+    }
+  ],
+  "overall_feedback": "도함수 조건 $f'(x)=2x$를 적분하여 적분상수를 포함한 $f(x)=x^2+C$를 얻었습니다. 이어서 $f(1)=1+C=3$에서 $C=2$를 정확히 구해 $f(x)=x^2+2$로 함수를 확정했습니다. 마지막에는 이 함수의 도함수가 $2x$이고 $f(1)=1+2=3$임을 직접 확인하여, 구한 함수가 주어진 두 조건을 모두 만족함을 보였습니다. 풀이의 흐름이 간결하고 논리적으로 빠진 단계가 없습니다. 선택적인 보완으로, 모든 실수에서 도함수가 같은 두 함수는 상수만큼만 차이 난다는 사실을 한 줄 덧붙이면 $f(x)=x^2+C$라는 형태로 쓸 수 있는 근거가 더 분명해집니다.",
+  "review_flags": [],
+  "meta": {
+    "provider": "anthropic",
+    "is_demo": false,
+    "model": "claude-opus-5-5",
+    "response_models": [
+      "claude-opus-5-5"
+    ],
+    "prompt_version": "free-v2",
+    "prompt_sha256": {
+      "common-v2.txt": "485c99038b2d8eb9a020b64dcbdf791906d030434f19342e0110aae544d8b63e",
+      "free-feedback-v2.txt": "47dee6bc33bfbf3341c74ba1f40f2d0eaa7b6de5508227345486a7a857473f60",
+      "free-table-v2.txt": "e42440a433a7e84b8b7a20ee1f5e39162cc411f5303cad176a09148c7781b036"
+    },
+    "temperature": 1.0,
+    "max_tokens": 16000,
+    "timeout": 180.0,
+    "max_retries": 2,
+    "config_sha256": "00c9e9fb11cc5f5759342f13e032bfd5e29333a4d9064d4464734d2b9ed83147",
+    "input_sha256": "3ba333711d169f88616abc22a633ad3059bc0f6abfdc55d9b9ce6d3141cac349",
+    "answer_body_sha256": "ab6621a29bff4edfa15168dc1149591d1f0aa5cf5416b42e67b4f3c732a6ca83",
+    "created_at": "2026-09-29T08:46:25.947326+00:00",
+    "calls": 2,
+    "retry_count": 0
+  }
+}
