@@ -1,0 +1,14 @@
+# Preregistered decision criteria. Write these down BEFORE looking at results.
+# tau must be one of 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.99.
+tau: 0.9
+risk_set: risk
+alternative_set: alternative
+normal_set: normal
+# Wrong answers published as "met" with confidence >= tau, on the risk set
+max_high_conf_false_met_on_risk: 0
+# Share of correct alternative-solution items judged partial/not_met
+max_alternative_false_deduction: 0.10
+# Share of normal-set items that clear tau (would be shown automatically)
+min_normal_coverage: 0.60
+# Accuracy among the normal-set items that clear tau
+min_normal_covered_accuracy: 0.95

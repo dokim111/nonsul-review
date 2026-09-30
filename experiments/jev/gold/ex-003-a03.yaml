@@ -1,0 +1,16 @@
+answer_id: ex-003-a03
+problem_id: ex-003
+is_alternative: true
+items:
+- rubric_id: R1
+  verdict: met
+  unresolved: false
+- rubric_id: R2
+  verdict: met
+  unresolved: false
+- rubric_id: R3
+  verdict: met
+  unresolved: false
+- rubric_id: R4
+  verdict: met
+  unresolved: false

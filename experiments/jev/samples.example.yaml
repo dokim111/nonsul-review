@@ -1,0 +1,10 @@
+# Optional manifest for jev_analyze.py --sets. Without it, sets are inferred:
+#   split: dev -> design; is_alternative -> alternative; error_types -> risk; else normal.
+# Answers used to tune questions must stay in `design`.
+design:
+  - ex-002-a01
+  - ex-002-a02
+  - ex-002-a03
+risk: []
+alternative: []
+normal: []
