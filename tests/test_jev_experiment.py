@@ -463,3 +463,29 @@ def test_ex002_r1_decomposition_matches_the_rubric_partial_boundary():
     both_wrong = {**one_initial_wrong, "R1.initial_any": 0.1}
     assert jc.aggregate_requirements(reqs, one_initial_wrong)[0] == "partial"
     assert jc.aggregate_requirements(reqs, both_wrong)[0] == "not_met"
+
+
+def test_http_transport_sends_an_explicit_user_agent(monkeypatch):
+    seen = {}
+
+    class Reply:
+        status = 200
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_):
+            return False
+
+        def read(self):
+            return b'{"answers": {}}'
+
+    def fake_urlopen(req, timeout):
+        seen.update({k.lower(): v for k, v in req.header_items()})
+        return Reply()
+
+    monkeypatch.setattr(jev_run.urllib.request, "urlopen", fake_urlopen)
+    status, payload = jev_run.http_transport("https://example.test/v1", "k", {"a": 1}, 5)
+    assert status == 200 and payload == {"answers": {}}
+    assert seen["user-agent"].startswith("nonsul-review-jev-pilot/")
+    assert "python-urllib" not in seen["user-agent"].lower()

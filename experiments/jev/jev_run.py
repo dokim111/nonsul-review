@@ -58,6 +58,7 @@ PROVIDERS: dict[str, dict[str, str]] = {
     },
 }
 FREE_MODELS = {"zen": {"jev-1.13-free"}, "typesafe": set()}
+USER_AGENT = "nonsul-review-jev-pilot/0.1 (+https://github.com/dokim111/nonsul-review)"
 
 Transport = Callable[[str, str, dict[str, Any], float], tuple[int, Any]]
 
@@ -68,7 +69,13 @@ def http_transport(endpoint: str, key: str, body: dict[str, Any], timeout: float
         endpoint,
         data=data,
         method="POST",
-        headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
+        headers={
+            "Authorization": f"Bearer {key}",
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            # Cloudflare-fronted gateways reject urllib's default agent (error 1010).
+            "User-Agent": USER_AGENT,
+        },
     )
     try:
         with urllib.request.urlopen(req, timeout=timeout) as resp:
