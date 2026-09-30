@@ -489,3 +489,13 @@ def test_http_transport_sends_an_explicit_user_agent(monkeypatch):
     assert status == 200 and payload == {"answers": {}}
     assert seen["user-agent"].startswith("nonsul-review-jev-pilot/")
     assert "python-urllib" not in seen["user-agent"].lower()
+
+
+@pytest.mark.parametrize("pid", ["ex-002", "ex-003"])
+def test_v2_requirements_change_only_wording(pid):
+    problem = jc.discover_problems([ROOT / "examples" / pid])[pid][0]
+    v1 = jc.load_requirements(JEV / "requirements" / f"{pid}.yaml", problem)
+    v2 = jc.load_requirements(JEV / "requirements-v2" / f"{pid}.yaml", problem)
+    for rid in v1:
+        assert [(r["id"], r["role"]) for r in v1[rid]] == [(r["id"], r["role"]) for r in v2[rid]]
+    assert any(a["question"] != b["question"] for rid in v1 for a, b in zip(v1[rid], v2[rid]))

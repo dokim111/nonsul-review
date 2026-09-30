@@ -17,7 +17,8 @@ TypeSafe AI의 Jev가 수리논술 루브릭 항목 판정을 **공개해도 될
 | `jev_common.py` | 입력 읽기, 세 가지 질문 설계, 응답 해석, 요구사항 집계 |
 | `criteria.yaml` | **실행 전에 정한** 채택 기준 |
 | `gold/` | 공개 예제 `ex-002`·`ex-003`의 작성자 기준 판정 |
-| `requirements/` | 변형 C용 공개 문항 요구사항 분해 |
+| `requirements/` | 변형 C용 공개 문항 요구사항 분해 (v1, 설계 실행 `-v1`에 사용) |
+| `requirements-v2/` | 같은 요구사항 ID·역할에 **풀이 경로 중립 문구**만 바꾼 v2. v1에서 올바른 대안 풀이의 확신도가 낮았던 점을 반영 |
 | `samples.example.yaml` | 표본 구분 목록의 예시 |
 
 비공개 문항용 요구사항 분해는 `data/private/jev/requirements/`에 둔다.
