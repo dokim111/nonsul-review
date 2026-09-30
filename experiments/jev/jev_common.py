@@ -21,6 +21,11 @@ VERDICTS = ("met", "partial", "not_met")
 VARIANTS = ("A", "B", "C")
 PROBABILITY_TOLERANCE = 0.02
 LANGS = ("ko", "en")
+# Instruction policies. p1 = design runs up to v2 ("credit only what is written").
+# p2 = agreed grading principle: credit conditions established anywhere in the
+# answer and their standard immediate consequences; never invent missing core steps.
+POLICIES = ("p1", "p2")
+DEFAULT_POLICY = "p2"
 
 # --------------------------------------------------------------------------- inputs
 
@@ -129,34 +134,86 @@ _TEXT = {
 }
 
 
-def _item_text(problem: Problem, rid: str, lang: str) -> str:
+_POLICY_P2 = {
+    "ko": {
+        "item": (
+            "state.student_answer가 채점 기준 {rid}({step})를 충족하는지 판정하라. "
+            "state.accepted_alternatives와 수학적으로 타당한 다른 풀이도 인정한다. "
+            "답안 전체에서 이미 제시한 조건과 근거는 이 항목에서도 인정하며, 같은 근거의 "
+            "반복 서술을 요구하지 않는다. 이미 제시한 근거의 표준적인 즉시 귀결은 인정하되, "
+            "빠진 핵심 논증을 새로 만들어 보충하지 않는다. 결론이나 최종값이 맞아도 기준이 "
+            "요구하는 핵심 근거가 답안 어디에도 없으면 충족이 아니다.\n"
+            "기준: {criteria}\n부분 인정 조건: {partial}"
+        ),
+        "req": (
+            "state.student_answer 전체를 근거로 답하라. 답안의 다른 부분에서 이미 제시한 조건과 "
+            "근거도 인정하며, 같은 근거를 반복해 쓰지 않았다는 이유로 아니오라고 하지 마라. "
+            "이미 제시한 근거의 표준적인 즉시 귀결은 인정하되, 빠진 핵심 논증을 새로 만들어 "
+            "보충하지 마라. 질문: {question}"
+        ),
+    },
+    "en": {
+        "item": (
+            "Decide whether state.student_answer satisfies rubric item {rid} ({step}). "
+            "Accept state.accepted_alternatives and other mathematically valid solutions. "
+            "Conditions and justifications established anywhere in the answer count for this "
+            "item; do not require them to be restated. Accept standard immediate consequences "
+            "of what was established, but do not supply missing core arguments. A correct "
+            "conclusion or final value does not satisfy the item when the required core "
+            "justification appears nowhere in the answer.\nCriteria: {criteria}\n"
+            "Partial condition: {partial}"
+        ),
+        "req": (
+            "Answer from the whole of state.student_answer. Conditions and justifications "
+            "established elsewhere in the answer count; do not answer no merely because they "
+            "were not restated. Accept standard immediate consequences of what was "
+            "established, but do not supply missing core arguments. Question: {question}"
+        ),
+    },
+}
+
+
+def texts(lang: str, policy: str = DEFAULT_POLICY) -> dict[str, str]:
+    if policy not in POLICIES:
+        raise ValueError(f"unknown policy {policy}")
+    base = dict(_TEXT[lang])
+    if policy == "p2":
+        base.update(_POLICY_P2[lang])
+    return base
+
+
+def _item_text(problem: Problem, rid: str, lang: str, policy: str = DEFAULT_POLICY) -> str:
     item = next(r for r in problem.rubric if r.id == rid)
-    text = _TEXT[lang]
+    text = texts(lang, policy)
     return text["item"].format(
         rid=item.id, step=item.step, criteria=item.criteria, partial=item.partial or text["none"]
     )
 
 
-def questions_variant_a(problem: Problem, lang: str) -> dict[str, Any]:
+def questions_variant_a(
+    problem: Problem, lang: str, policy: str = DEFAULT_POLICY
+) -> dict[str, Any]:
     """One Choice per rubric item over the three verdicts."""
-    text = _TEXT[lang]
+    text = texts(lang, policy)
     return {
         item.id: {
             "type": "choice",
-            "instructions": _item_text(problem, item.id, lang),
+            "instructions": _item_text(problem, item.id, lang, policy),
             "criteria": {v: text[v] for v in VERDICTS},
         }
         for item in problem.rubric
     }
 
 
-def questions_variant_b(problem: Problem, lang: str) -> dict[str, Any]:
+def questions_variant_b(
+    problem: Problem, lang: str, policy: str = DEFAULT_POLICY
+) -> dict[str, Any]:
     """One Score per rubric item; levels ordered not_met < partial < met."""
-    text = _TEXT[lang]
+    text = texts(lang, policy)
     return {
         item.id: {
             "type": "score",
-            "instructions": _item_text(problem, item.id, lang),
+            "instructions": _item_text(problem, item.id, lang, policy),
             "criteria": [f"{v}: {text[v]}" for v in ("not_met", "partial", "met")],
         }
         for item in problem.rubric
@@ -188,10 +245,13 @@ def load_requirements(path: Path, problem: Problem) -> dict[str, list[dict[str, 
 
 
 def questions_variant_c(
-    problem: Problem, lang: str, requirements: dict[str, list[dict[str, str]]]
+    problem: Problem,
+    lang: str,
+    requirements: dict[str, list[dict[str, str]]],
+    policy: str = DEFAULT_POLICY,
 ) -> dict[str, Any]:
     """One Noul per requirement; question keys are ``<rubric>__<requirement>``."""
-    text = _TEXT[lang]
+    text = texts(lang, policy)
     questions: dict[str, Any] = {}
     for rid, reqs in requirements.items():
         for req in reqs:
@@ -209,15 +269,16 @@ def build_request(
     lang: str,
     model: str,
     requirements: dict[str, list[dict[str, str]]] | None = None,
+    policy: str = DEFAULT_POLICY,
 ) -> dict[str, Any]:
     if variant == "A":
-        questions = questions_variant_a(case.problem, lang)
+        questions = questions_variant_a(case.problem, lang, policy)
     elif variant == "B":
-        questions = questions_variant_b(case.problem, lang)
+        questions = questions_variant_b(case.problem, lang, policy)
     elif variant == "C":
         if requirements is None:
             raise ValueError(f"variant C needs a requirements file for {case.problem.id}")
-        questions = questions_variant_c(case.problem, lang, requirements)
+        questions = questions_variant_c(case.problem, lang, requirements, policy)
     else:
         raise ValueError(f"unknown variant {variant}")
     return {"model": model, "state": build_state(case.problem, case.answer), "questions": questions}

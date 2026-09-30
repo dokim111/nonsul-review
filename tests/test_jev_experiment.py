@@ -265,7 +265,7 @@ def test_analysis_separates_sets_and_counts_confident_false_met(tmp_path, monkey
     )
     assert code == 0
     report = json.loads((out / "report.json").read_text(encoding="utf-8"))["report"][
-        "variant-A/ko/jev-1.13-free"
+        "variant-A/ko/jev-1.13-free/p2"
     ]
     risk = report["sets"]["risk"]
     tau90 = next(p for p in risk["curve"] if p["tau"] == 0.9)
@@ -411,9 +411,9 @@ def test_missing_items_stay_in_the_denominator(tmp_path, monkeypatch):
 
     assert jev_run.run(_args(tmp_path), transport=partial_reply) == 0
     data, text = _analyze(tmp_path)
-    summary = data["report"]["variant-A/ko/jev-1.13-free"]["sets"]["design"]
+    summary = data["report"]["variant-A/ko/jev-1.13-free/p2"]["sets"]["design"]
     assert summary["items"] == 12 and summary["undecided"] == 9 and summary["accuracy"] == 0.25
-    assert data["report"]["variant-A/ko/jev-1.13-free"]["requests"] == {"incomplete": 3}
+    assert data["report"]["variant-A/ko/jev-1.13-free/p2"]["requests"] == {"incomplete": 3}
     assert "item missing from response" in text
 
 
@@ -443,7 +443,7 @@ def test_changed_inputs_and_mismatched_opus_results_are_excluded(tmp_path, monke
     target = answers / "a03.md"
     target.write_text(target.read_text(encoding="utf-8") + "\n추가 문장.", encoding="utf-8")
     data, _ = _analyze(tmp_path, answers=answers, opus=opus)
-    block = data["report"]["variant-A/ko/jev-1.13-free"]
+    block = data["report"]["variant-A/ko/jev-1.13-free/p2"]
     assert block["sets"]["design"]["items"] == 8  # a03 excluded as stale
     assert any("changed since this run" in s for s in data["stale"])
     assert block["versus_opus"] == {"compared": 0, "skipped_answer_mismatch": 1}
@@ -499,3 +499,62 @@ def test_v2_requirements_change_only_wording(pid):
     for rid in v1:
         assert [(r["id"], r["role"]) for r in v1[rid]] == [(r["id"], r["role"]) for r in v2[rid]]
     assert any(a["question"] != b["question"] for rid in v1 for a, b in zip(v1[rid], v2[rid]))
+
+
+def test_policy_p2_carries_the_grading_principle_and_p1_is_unchanged():
+    case = _case()
+    reqs = jc.load_requirements(JEV / "requirements-v3" / "ex-003.yaml", case.problem)
+    p1 = jc.build_request(case, "C", "ko", "m", reqs, "p1")["questions"]["R3__R3.limit"]
+    p2 = jc.build_request(case, "C", "ko", "m", reqs, "p2")["questions"]["R3__R3.limit"]
+    assert "명시적으로 쓰인 논증만 인정" in p1["instructions"]
+    assert "반복해 쓰지 않았다는 이유로 아니오" in p2["instructions"]
+    a2 = jc.build_request(case, "A", "ko", "m", None, "p2")["questions"]["R3"]["instructions"]
+    assert "반복 서술을 요구하지 않는다" in a2
+    assert jc.DEFAULT_POLICY == "p2"
+
+
+def test_v3_ex003_base_accepts_non_strict_bound():
+    case = _case()
+    v3 = jc.load_requirements(JEV / "requirements-v3" / "ex-003.yaml", case.problem)
+    base = next(r for r in v3["R2"] if r["role"] == "base")
+    assert "≥로 보인 경우도 예" in base["question"]
+
+
+def test_check_decomposition_flags_gold_the_rule_cannot_express(tmp_path):
+    import check_decomposition as cd
+
+    human = tmp_path / "human.yaml"
+    human.write_text(
+        "- answer_id: ex-003-t04\n  problem_id: ex-003\n  items:\n"
+        "    R2: {gold: partial, requirements: {R2.inequality: yes, R2.structure: no}}\n"
+        "- answer_id: ex-003-tx\n  problem_id: ex-003\n  items:\n"
+        "    R2: {gold: partial, requirements: {R2.inequality: no, R2.structure: no}}\n",
+        encoding="utf-8",
+    )
+    issues = cd.check([EX3], [JEV / "requirements-v3"], human)
+    assert issues == ["ex-003-tx R2: human requirements aggregate to not_met, gold is partial"]
+
+
+def test_runner_refuses_unwritten_templates(tmp_path, monkeypatch):
+    monkeypatch.setenv("OPENCODE_API_KEY", "test")
+    answers = tmp_path / "answers"
+    answers.mkdir()
+    (answers / "t.md").write_text(
+        "---\nid: ex-003-t99\nproblem: ex-003\nsource: synthetic\nsplit: test\n---\n"
+        f"({jev_run.TEMPLATE_MARK}. 집중 결함: ...)\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(SystemExit):
+        jev_run.run(
+            [
+                "--problems",
+                str(EX3),
+                "--answers",
+                str(answers),
+                "--variant",
+                "A",
+                "--out",
+                str(tmp_path / "o"),
+            ],
+            transport=lambda *a: (200, {}),
+        )

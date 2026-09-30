@@ -34,7 +34,9 @@ from typing import Any
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from jev_common import (  # noqa: E402
+    DEFAULT_POLICY,
     LANGS,
+    POLICIES,
     VARIANTS,
     Case,
     build_request,
@@ -58,6 +60,7 @@ PROVIDERS: dict[str, dict[str, str]] = {
     },
 }
 FREE_MODELS = {"zen": {"jev-1.13-free"}, "typesafe": set()}
+TEMPLATE_MARK = "여기에 답안 전문을 쓴다"  # placeholder text in data/private/jev-test templates
 USER_AGENT = "nonsul-review-jev-pilot/0.1 (+https://github.com/dokim111/nonsul-review)"
 
 Transport = Callable[[str, str, dict[str, Any], float], tuple[int, Any]]
@@ -134,6 +137,12 @@ def run(argv: list[str] | None = None, transport: Transport = http_transport) ->
     parser.add_argument("--answers", nargs="+", type=Path, required=True)
     parser.add_argument("--variant", choices=VARIANTS, required=True)
     parser.add_argument("--lang", choices=LANGS, default="ko")
+    parser.add_argument(
+        "--policy",
+        choices=POLICIES,
+        default=DEFAULT_POLICY,
+        help="instruction policy: p1 = design runs up to requirements v2, p2 = agreed principle",
+    )
     parser.add_argument("--requirements", nargs="*", type=Path, default=[])
     parser.add_argument("--provider", choices=sorted(PROVIDERS), default="zen")
     parser.add_argument("--model", help="override the provider's default model")
@@ -174,6 +183,9 @@ def run(argv: list[str] | None = None, transport: Transport = http_transport) ->
     cases = discover_cases(args.problems, args.answers)
     if not cases:
         parser.error("no answers matched the given problems")
+    unwritten = [c.answer.id for c in cases if TEMPLATE_MARK in c.answer.body]
+    if unwritten:
+        parser.error(f"answer templates are not written yet: {', '.join(unwritten)}")
     blocked = [c.answer.id for c in cases if c.answer.source != "synthetic"]
     if blocked and not args.allow_learner_answers:
         parser.error(f"learner answers would leave this machine: {', '.join(blocked)}")
@@ -189,7 +201,7 @@ def run(argv: list[str] | None = None, transport: Transport = http_transport) ->
         if args.variant == "C" and reqs is None:
             print(f"skip {case.answer.id}: no requirements for {case.problem.id}", file=sys.stderr)
             continue
-        body = build_request(case, args.variant, args.lang, args.model, reqs)
+        body = build_request(case, args.variant, args.lang, args.model, reqs, args.policy)
         for k in range(1 if args.probe else args.repeat):
             target = base / f"{case.answer.id}.r{k}.json"
             if args.dry_run:
@@ -231,6 +243,7 @@ def run(argv: list[str] | None = None, transport: Transport = http_transport) ->
                 "meta": {
                     "variant": args.variant,
                     "lang": args.lang,
+                    "policy": args.policy,
                     "provider": args.provider,
                     "model": args.model,
                     "endpoint_host": args.endpoint.split("/")[2] if "//" in args.endpoint else "",

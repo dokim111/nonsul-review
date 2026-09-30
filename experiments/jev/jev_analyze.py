@@ -74,8 +74,9 @@ def load_opus(dirs: list[Path]) -> dict[tuple[str, str, str], tuple[str, str | N
     return out
 
 
-def block_of(meta: dict[str, Any]) -> tuple[str, str, str]:
-    return (meta["variant"], meta["lang"], str(meta.get("model")))
+def block_of(meta: dict[str, Any]) -> tuple[str, str, str, str]:
+    # Records written before instruction policies existed used p1.
+    return (meta["variant"], meta["lang"], str(meta.get("model")), meta.get("policy", "p1"))
 
 
 def load_runs(
@@ -345,7 +346,7 @@ def main(argv: list[str] | None = None) -> int:
         block_rows = [r for r in rows if r["block"] == block]
         first = [r for r in block_rows if r["repeat"] == 0]
         requests = {k[1]: v for k, v in audit["requests"].items() if k[0] == block}
-        report["variant-{}/{}/{}".format(*block)] = {
+        report["variant-{}/{}/{}/{}".format(*block)] = {
             "requests": requests,
             "sets": {
                 s: summarize([r for r in first if r["set"] == s], DEFAULT_TAUS)
